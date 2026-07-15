@@ -6,16 +6,16 @@ import json
 import re
 import shutil
 import subprocess
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
-PROCESS_PATTERNS = {
-    "claude": r"\bclaude\b",
-    "langchain": r"\blangchain\b",
-    "autogen": r"\bautogen\b",
-    "crewai": r"\bcrewai\b",
-    "ollama": r"\bollama\b",
-    "openai-agent": r"\bopenai[-_]agent\b",
+PROCESS_KEYWORDS = {
+    "claude": ("claude",),
+    "langchain": ("langchain",),
+    "autogen": ("autogen",),
+    "crewai": ("crewai",),
+    "ollama": ("ollama",),
+    "openai-agent": ("openai-agent", "openai_agent"),
 }
 
 DOCKER_IMAGE_HINTS = (
@@ -57,23 +57,36 @@ def _run(command: list[str]) -> str:
     return result.stdout if result.returncode == 0 else ""
 
 
+def _searchable(command: str) -> str:
+    """Drop hidden path segments so config paths like ~/.claude/ do not look like agents."""
+    segments = []
+    for token in command.lower().split():
+        segments.extend(part for part in token.split("/") if part and not part.startswith("."))
+    return " ".join(segments)
+
+
 def _scan_processes() -> list[dict[str, Any]]:
     output = _run(["ps", "aux"])
     if not output:
         return []
 
     assets = []
+    seen: set[str] = set()
     for line in output.splitlines()[1:]:
         fields = line.split(None, 10)
         if len(fields) < 11:
             continue
         pid, command = fields[1], fields[10]
         lowered = command.lower()
-        if "agentguard" in lowered:
+        if "agentguard" in lowered or "shell-snapshots" in lowered:
             continue
-        for name, pattern in PROCESS_PATTERNS.items():
-            if not re.search(pattern, lowered):
+        haystack = _searchable(command)
+        for name, keywords in PROCESS_KEYWORDS.items():
+            if not any(keyword in haystack for keyword in keywords):
                 continue
+            if name in seen:
+                continue
+            seen.add(name)
             assets.append(
                 {
                     "type": "agent",
