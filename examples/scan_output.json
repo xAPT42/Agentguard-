@@ -1,0 +1,116 @@
+{
+  "version": "0.1.0",
+  "summary": {
+    "total": 4,
+    "by_risk_tier": {
+      "critical": 1,
+      "medium": 2,
+      "low": 1
+    },
+    "by_status": {
+      "ORPHANED": 1,
+      "ACTIVE": 3
+    },
+    "critical_count": 1
+  },
+  "assets": [
+    {
+      "type": "mcp_server",
+      "name": "Ghost MCP",
+      "url": "http://10.4.12.87:9000",
+      "tools": [
+        "read_file",
+        "write_file",
+        "delete_file",
+        "exec_shell",
+        "query_db",
+        "list_secrets"
+      ],
+      "status": "ORPHANED",
+      "discovered_via": "config",
+      "config_path": "/home/dev/.claude/settings.json",
+      "security": {
+        "requires_auth": false,
+        "auth_type": null
+      },
+      "risk_score": 100,
+      "risk_tier": "critical",
+      "owasp_tags": [
+        "LLM01",
+        "LLM06",
+        "LLM08"
+      ]
+    },
+    {
+      "type": "mcp_server",
+      "name": "Claude MCP",
+      "url": "http://127.0.0.1:3000",
+      "tools": [
+        "read_file",
+        "list_directory",
+        "search_codebase"
+      ],
+      "status": "ACTIVE",
+      "discovered_via": "port_scan",
+      "security": {
+        "requires_auth": false,
+        "auth_type": null
+      },
+      "risk_score": 44,
+      "risk_tier": "medium",
+      "owasp_tags": [
+        "LLM06"
+      ]
+    },
+    {
+      "type": "agent",
+      "name": "LangChain Agent",
+      "source": "process",
+      "pid": 48211,
+      "container_id": null,
+      "command": "python -m langchain_app.server --mcp claude-mcp --tools shell,http",
+      "api_keys_detected": [
+        "OPENAI_API_KEY",
+        "LANGCHAIN_TRACING_V2",
+        "LANGCHAIN_API_KEY"
+      ],
+      "tools": [
+        "run_shell",
+        "http_fetch",
+        "write_report",
+        "read_file",
+        "search_index",
+        "send_email"
+      ],
+      "status": "ACTIVE",
+      "risk_score": 40,
+      "risk_tier": "medium",
+      "owasp_tags": [
+        "LLM01",
+        "LLM06",
+        "LLM08"
+      ]
+    },
+    {
+      "type": "mcp_server",
+      "name": "DataHub MCP",
+      "url": "http://datahub-gms.internal:8080",
+      "tools": [
+        "get_dataset",
+        "get_lineage"
+      ],
+      "status": "ACTIVE",
+      "discovered_via": "config",
+      "config_path": "/home/dev/projects/platform/.mcp.json",
+      "security": {
+        "requires_auth": true,
+        "auth_type": "bearer"
+      },
+      "risk_score": 4,
+      "risk_tier": "low",
+      "owasp_tags": [
+        "LLM06"
+      ]
+    }
+  ]
+}

@@ -9,12 +9,12 @@ $ agentguard
 Scanning for MCP servers and AI agents...
 NAME            | TYPE       | STATUS   | RISK | TIER
 ----------------+------------+----------+------+---------
-Ghost MCP       | mcp_server | ORPHANED | 85   | critical
-LangChain Agent | agent      | ACTIVE   | 67   | high
-Claude MCP      | mcp_server | ACTIVE   | 42   | medium
-DataHub MCP     | mcp_server | ACTIVE   | 15   | low
+Ghost MCP       | mcp_server | ORPHANED | 100  | critical
+Claude MCP      | mcp_server | ACTIVE   | 44   | medium
+LangChain Agent | agent      | ACTIVE   | 40   | medium
+DataHub MCP     | mcp_server | ACTIVE   | 4    | low
 
-4 asset(s) discovered — critical: 1, high: 1, low: 1, medium: 1
+4 asset(s) discovered — critical: 1, low: 1, medium: 2
 Report written to scan_output.json
 DataHub: 4 written, 0 failed
 

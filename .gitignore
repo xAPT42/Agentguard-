@@ -5,5 +5,5 @@ build/
 dist/
 .venv/
 venv/
-scan_output.json
+/scan_output.json
 .env
