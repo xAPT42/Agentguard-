@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AgentGuard — AI Agent Fleet Governance</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   :root {
     --sidebar: #0D1117;
@@ -805,6 +805,27 @@ function renderFleet() {
 }
 
 /* ---------- Donut ---------- */
+/* Never replace the canvas when Chart.js is missing: the CDN may still be in
+   flight, and a destroyed canvas can never be drawn into once it arrives. */
+function chartMessage(canvasId, show) {
+  const c = document.getElementById(canvasId);
+  if (!c) return;
+  const parent = c.parentElement;
+  let msg = parent.querySelector(".chart-msg");
+  if (show) {
+    if (!msg) {
+      msg = document.createElement("div");
+      msg.className = "chart-msg empty";
+      msg.textContent = "Chart library unavailable — the data is in the tables.";
+      parent.appendChild(msg);
+    }
+    c.style.display = "none";
+  } else {
+    if (msg) msg.remove();
+    c.style.display = "";
+  }
+}
+
 let donut = null;
 function renderChart(assets) {
   const t = tiersOf(assets);
@@ -813,7 +834,8 @@ function renderChart(assets) {
     `<div class="legend-row"><span class="dot" style="background:${TIER_COLOR[k]}"></span>
      <span style="text-transform:capitalize">${k}</span><span class="legend-count">${t[k]}</span></div>`).join("");
   const ctx = document.getElementById("donut");
-  if (typeof Chart === "undefined") { ctx.parentElement.innerHTML = '<div class="empty">Chart library unavailable offline.</div>'; return; }
+  if (typeof Chart === "undefined") { chartMessage("donut", true); return; }
+  chartMessage("donut", false);
   if (donut) donut.destroy();
   donut = new Chart(ctx, {
     type: "doughnut",
@@ -871,7 +893,8 @@ function renderDimChart() {
   const assets = sorted();
   const totals = DIMS.map(d => assets.reduce((s, a) => s + dims(a)[d.key], 0));
   const ctx = document.getElementById("dimbar");
-  if (typeof Chart === "undefined") { ctx.parentElement.innerHTML = '<div class="empty">Chart library unavailable offline.</div>'; return; }
+  if (typeof Chart === "undefined") { chartMessage("dimbar", true); return; }
+  chartMessage("dimbar", false);
   if (dimChart) dimChart.destroy();
   dimChart = new Chart(ctx, {
     type: "bar",
@@ -1224,9 +1247,22 @@ document.getElementById("filters").addEventListener("click", e => {
 });
 window.addEventListener("hashchange", () => showView((location.hash || "#fleet").slice(1)));
 
-loadSettings();
-showView((location.hash || "#fleet").slice(1));
-load();
+function boot() {
+  loadSettings();
+  showView((location.hash || "#fleet").slice(1));
+  load();
+}
+/* Deferred scripts (Chart.js) run before DOMContentLoaded, so charts are ready here. */
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+else boot();
+
+/* Safety net: if the CDN resolves late, draw the charts once it lands. */
+window.addEventListener("load", () => {
+  if (DATA && typeof Chart !== "undefined") {
+    renderChart(sorted());
+    if (VIEW === "risk") renderDimChart();
+  }
+});
 </script>
 </body>
 </html>
