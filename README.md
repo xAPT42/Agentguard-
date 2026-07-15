@@ -63,7 +63,18 @@ pip install -e .
 
 # Dry run — scan and score, write nothing
 agentguard --no-datahub
+```
 
+Need a DataHub to publish into? Use the official quickstart — it brings up GMS on `:8080` and the UI on `:9002` (login `datahub` / `datahub`), and expects roughly 8GB of RAM available to Docker:
+
+```bash
+pip install acryl-datahub
+datahub docker quickstart          # stop with: datahub docker quickstart --stop
+```
+
+`demo/demo.sh` runs that quickstart, waits for it, and executes a full scan against it.
+
+```bash
 # Publish the inventory to DataHub
 export DATAHUB_URL=http://localhost:8080
 export DATAHUB_TOKEN=your-token
@@ -94,12 +105,14 @@ If DataHub is unreachable, AgentGuard warns and completes the scan — the local
 | Source | What it finds |
 |---|---|
 | `~/.claude/settings.json`, `.mcp.json`, `.cursorrules` | Declared MCP servers, their tools, and auth configuration |
-| Ports 3000, 5000, 8080, 8888, 9000 | Undeclared MCP servers, confirmed live via `GET /health` or `/mcp` |
+| Ports 3000, 5000, 8080, 8888, 9000 | Undeclared MCP servers, confirmed by a JSON-RPC `initialize` handshake on `/mcp` |
 | `ps aux` | Claude, LangChain, AutoGen, CrewAI, Ollama, OpenAI agent processes |
 | `docker ps` | Containerized AI workloads |
 | `.env` in cwd and `~/projects/*` | `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `LANGCHAIN_*`, `AGENT_*` |
 
 **Credential names only — never values.** AgentGuard records that `ANTHROPIC_API_KEY` is present in a given file. The secret itself is never read into memory, never written to the report, and never sent to DataHub.
+
+**Port discovery requires protocol evidence.** A reachable `/health` route proves only that *something* is listening — nearly every web service exposes one. Before cataloguing a port, AgentGuard sends a JSON-RPC `initialize` to `/mcp` and requires an MCP response. An endpoint answering `401`/`403` is recorded as an MCP server that requires authentication; an ordinary web application on port 8080 is not recorded at all.
 
 Every asset resolves to one of three states:
 

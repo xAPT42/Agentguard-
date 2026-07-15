@@ -15,6 +15,22 @@ SCAN_PORTS = [3000, 5000, 8080, 8888, 9000]
 SOCKET_TIMEOUT = 1.0
 HTTP_TIMEOUT = 1.0
 HEALTH_PATHS = ["/health", "/mcp"]
+MCP_PATH = "/mcp"
+
+MCP_PROBE = {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "params": {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {},
+        "clientInfo": {"name": "agentguard", "version": "0.1.0"},
+    },
+}
+MCP_PROBE_HEADERS = {"Accept": "application/json, text/event-stream"}
+MCP_BODY_MARKERS = ("jsonrpc", "protocolversion", "serverinfo", "result")
+MCP_AUTH_STATUSES = (401, 403)
+MCP_ENDPOINT_STATUSES = (400, 405, 406, 415)
 
 CONFIG_PATHS = [
     Path.home() / ".claude" / "settings.json",
@@ -74,6 +90,39 @@ def _probe_http(url: str) -> bool:
         if response.status_code < 500:
             return True
     return False
+
+
+def _probe_mcp(url: str) -> dict[str, Any] | None:
+    """Return security info if the endpoint speaks MCP, else None.
+
+    A generic /health route proves only that something is listening. Discovery
+    requires the JSON-RPC endpoint itself to answer, so ordinary web services
+    are not catalogued as MCP servers.
+    """
+    target = url.rstrip("/") + MCP_PATH
+    try:
+        response = requests.post(
+            target,
+            json=MCP_PROBE,
+            headers=MCP_PROBE_HEADERS,
+            timeout=HTTP_TIMEOUT,
+        )
+    except requests.RequestException:
+        return None
+
+    if response.status_code in MCP_AUTH_STATUSES:
+        return {"requires_auth": True, "auth_type": "unknown"}
+
+    if response.status_code in (200, 202):
+        body = response.text[:1000].lower()
+        if any(marker in body for marker in MCP_BODY_MARKERS):
+            return {"requires_auth": False, "auth_type": None}
+        return None
+
+    if response.status_code in MCP_ENDPOINT_STATUSES:
+        return {"requires_auth": False, "auth_type": None}
+
+    return None
 
 
 def _port_open(host: str, port: int) -> bool:
@@ -190,7 +239,8 @@ def _from_ports(known_urls: set[str]) -> list[dict[str, Any]]:
         url = f"http://127.0.0.1:{port}"
         if url in known_urls:
             continue
-        if not _probe_http(url):
+        security = _probe_mcp(url)
+        if security is None:
             continue
         assets.append(
             {
@@ -200,7 +250,7 @@ def _from_ports(known_urls: set[str]) -> list[dict[str, Any]]:
                 "tools": [],
                 "status": "ACTIVE",
                 "discovered_via": "port_scan",
-                "security": {"requires_auth": False, "auth_type": None},
+                "security": security,
                 "risk_score": 0,
             }
         )
