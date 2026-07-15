@@ -257,8 +257,9 @@
   .save-note { font-size: 12.5px; color: var(--low); font-weight: 500; opacity: 0; transition: opacity .2s; }
   .save-note.show { opacity: 1; }
   .conn-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
-  .conn-dot.pinging { background: var(--medium); animation: pulse .6s ease-in-out infinite; }
+  .conn-dot.pinging { background: #94A3B8; animation: pulse .6s ease-in-out infinite; }
   .conn-dot.ok { background: var(--low); }
+  .conn-dot.bad { background: var(--critical); }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
 
   /* ---------- Scan modal ---------- */
@@ -550,6 +551,9 @@ const FALLBACK = {
   ]
 };
 
+const DATAHUB_UI = "http://46.224.30.198:9002";
+const DATAHUB_GMS_DEFAULT = "http://localhost:8080";
+
 const OWNERS = { "Ghost MCP": "unassigned", "LangChain Agent": "ml-platform", "Claude MCP": "dev-tooling", "DataHub MCP": "data-governance" };
 const TIER_COLOR = { critical: "#DC2626", high: "#EA580C", medium: "#D97706", low: "#16A34A" };
 const FILTER_COLOR = { critical: "#ef4444", high: "#f97316", medium: "#eab308", low: "#22c55e" };
@@ -577,11 +581,15 @@ const OWASP_ALL = [
 ];
 const OWASP_COLOR = { LLM01: "#DC2626", LLM06: "#EA580C", LLM08: "#EA580C" };
 
+/* Display maxima: 40 + 30 + 20 + 10 = 100.
+   The scorer's raw signals can exceed the Agency and OWASP ceilings
+   (mutating 25 + shell 20 + sprawl 10 = 55; credential 10 + read 4 = 14),
+   so each dimension is clamped to its ceiling for display. */
 const DIMS = [
-  { key:"exposure", label:"Exposure",     max:P.NO_AUTH,                          color:"#ef4444" },
-  { key:"agency",   label:"Agency",       max:P.MUTATING + P.SHELL + P.SPRAWL,    color:"#f97316" },
-  { key:"quality",  label:"Data Quality", max:P.ORPHANED,                         color:"#eab308" },
-  { key:"owasp",    label:"OWASP",        max:P.CREDENTIAL + P.READ,              color:"#8b5cf6" }
+  { key:"exposure", label:"Exposure",     max:40, color:"#ef4444" },
+  { key:"agency",   label:"Agency",       max:30, color:"#f97316" },
+  { key:"quality",  label:"Data Quality", max:20, color:"#eab308" },
+  { key:"owasp",    label:"OWASP",        max:10, color:"#8b5cf6" }
 ];
 
 const SVG = {
@@ -614,6 +622,24 @@ function svgNode(markup, size, color) {
 /* Global fallbacks referenced from inline onerror handlers */
 function shieldSvg(size) { return svgNode('<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>', size || 20, "#6366F1"); }
 function dbSvg(size) { return svgNode('<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>', size || 20, "#6366F1"); }
+function openaiSvg(size) {
+  const wrap = document.createElement("span");
+  wrap.style.display = "inline-flex";
+  wrap.innerHTML = '<svg viewBox="0 0 24 24" width="' + (size || 18) + '" height="' + (size || 18) + '" fill="#6366f1">' +
+    '<text y="18" font-size="16" font-weight="bold">O</text></svg>';
+  return wrap.firstChild;
+}
+/* White mark first; on failure retry the black mark on a light plate; then the inline glyph. */
+function openaiFallback(img, size) {
+  if (!img.dataset.retried) {
+    img.dataset.retried = "1";
+    img.classList.remove("logo-dark");
+    img.src = "https://cdn.simpleicons.org/openai/000000";
+    return;
+  }
+  img.replaceWith(openaiSvg(size));
+}
+window.openaiFallback = openaiFallback; window.openaiSvg = openaiSvg;
 function skullNode(size) {
   const s = document.createElement("span");
   s.className = "skull";
@@ -633,7 +659,7 @@ const LOGOS = [
   { keys: ["postgresql", "postgres", "pg"], src: "https://cdn.simpleicons.org/postgresql/4169E1" },
   { keys: ["pinecone"], src: "https://cdn.simpleicons.org/pinecone/000000" },
   { keys: ["datahub"], src: "https://raw.githubusercontent.com/datahub-project/datahub/master/datahub-web-react/src/images/datahublogo.png", db: true },
-  { keys: ["openai", "gpt"], src: "https://cdn.simpleicons.org/openai/ffffff", dark: true },
+  { keys: ["openai", "gpt"], src: "https://cdn.simpleicons.org/openai/ffffff", dark: true, fb: "openaiFallback" },
   { keys: ["docker"], src: "https://cdn.simpleicons.org/docker/2496ED" },
   { keys: ["github"], src: "https://cdn.simpleicons.org/github/ffffff", dark: true },
   { keys: ["redis"], src: "https://cdn.simpleicons.org/redis/FF4438" }
@@ -659,9 +685,11 @@ function logoHTML(asset, size) {
   const cls = px > 20 ? "drawer-logo" : "logo";
   const entry = getLogo(asset.name);
   if (entry) {
-    const fb = entry.db ? "dbSvg" : "shieldSvg";
+    const handler = entry.fb
+      ? entry.fb + "(this," + px + ")"
+      : "this.replaceWith(" + (entry.db ? "dbSvg" : "shieldSvg") + "(" + px + "))";
     return '<img class="' + cls + (entry.dark ? " logo-dark" : "") + '" src="' + entry.src +
-      '" width="' + px + '" height="' + px + '" alt="" onerror="this.replaceWith(' + fb + "(" + px + '))">';
+      '" width="' + px + '" height="' + px + '" alt="" onerror="' + handler + '">';
   }
   if (String(asset.status).toUpperCase() === "ORPHANED")
     return '<span class="skull" style="font-size:' + Math.round(px * 0.8) + 'px">☠</span>';
@@ -676,15 +704,24 @@ const isExposed = a => a.type === "mcp_server" || String(a.url || "").startsWith
 const requiresAuth = a => !!(a.security && a.security.requires_auth);
 const holdsCreds = a => (a.api_keys_detected || []).length > 0;
 
-/* Risk decomposition — sums to the raw score from scorer.py (capped at 100). */
+/* Risk decomposition, computed from the asset's own fields using the scorer's
+   weights. `raw` is the uncapped sum the scorer works from; the per-dimension
+   values are clamped to the display ceilings in DIMS. */
 function dims(a) {
   const t = tools(a);
   const st = String(a.status || "").toUpperCase();
-  const exposure = (isExposed(a) && !requiresAuth(a)) ? P.NO_AUTH : 0;
-  const agency = (matches(t, MUTATING_KW) ? P.MUTATING : 0) + (matches(t, SHELL_KW) ? P.SHELL : 0) + (t.length > 5 ? P.SPRAWL : 0);
-  const quality = st === "ORPHANED" ? P.ORPHANED : st === "UNKNOWN" ? P.UNKNOWN : 0;
-  const owasp = (holdsCreds(a) ? P.CREDENTIAL : 0) + (matches(t, READ_KW) ? P.READ : 0);
-  return { exposure, agency, quality, owasp, total: Math.min(100, exposure + agency + quality + owasp) };
+  const rawExposure = (isExposed(a) && !requiresAuth(a)) ? P.NO_AUTH : 0;
+  const rawAgency = (matches(t, MUTATING_KW) ? P.MUTATING : 0) + (matches(t, SHELL_KW) ? P.SHELL : 0) + (t.length > 5 ? P.SPRAWL : 0);
+  const rawQuality = st === "ORPHANED" ? P.ORPHANED : st === "UNKNOWN" ? P.UNKNOWN : 0;
+  const rawOwasp = (holdsCreds(a) ? P.CREDENTIAL : 0) + (matches(t, READ_KW) ? P.READ : 0);
+  const cap = (v, m) => Math.min(v, m);
+  const exposure = cap(rawExposure, 40), agency = cap(rawAgency, 30);
+  const quality = cap(rawQuality, 20), owasp = cap(rawOwasp, 10);
+  return {
+    exposure, agency, quality, owasp,
+    total: exposure + agency + quality + owasp,
+    raw: Math.min(100, rawExposure + rawAgency + rawQuality + rawOwasp)
+  };
 }
 
 function toolRisk(tool) {
@@ -985,7 +1022,6 @@ function renderBadges(assets) {
 function lineageChain(asset) {
   const all = DATA.assets || [];
   const servers = all.filter(a => a.type === "mcp_server");
-  const agents = all.filter(a => a.type === "agent");
   const linked = (agent, server) => {
     const hay = [agent.command, agent.name, agent.image, agent.env_path].filter(Boolean).join(" ").toLowerCase();
     return hay.includes(norm(server.name)) || (server.url && hay.includes(String(server.url).toLowerCase()));
@@ -996,17 +1032,25 @@ function lineageChain(asset) {
     Object.keys(DATASET_KW).forEach(k => { if (t.includes(k) && !out.includes(DATASET_KW[k])) out.push(DATASET_KW[k]); });
     return out;
   };
-  let chain = [];
+  const self = { label: asset.name, self: true };
+
+  /* A vector store terminates at its own collection — two nodes is the whole story. */
+  if (asset.type === "vector_store") {
+    const collection = tools(asset).some(t => t.includes("collection")) ? "Collection" : "Index";
+    return [self, { label: collection }];
+  }
+
+  /* An agent reaches data through the MCP server it talks to. */
   if (asset.type === "agent") {
     const up = servers.filter(s => linked(asset, s));
-    chain = [{ label: asset.name, self: true }].concat(up.map(s => ({ label: s.name })));
-    up.forEach(s => datasetsOf(s).forEach(d => chain.push({ label: d })));
-  } else {
-    const down = agents.filter(a => linked(a, asset));
-    chain = down.map(a => ({ label: a.name })).concat([{ label: asset.name, self: true }]);
-    datasetsOf(asset).forEach(d => chain.push({ label: d }));
+    const server = up[0];
+    const dataset = server ? (datasetsOf(server)[0] || "Dataset") : "Dataset";
+    return server ? [self, { label: server.name }, { label: dataset }] : [self];
   }
-  return chain;
+
+  /* An MCP server publishes to the catalogue and reads from a dataset. */
+  const dataset = datasetsOf(asset)[0] || "Dataset";
+  return [self, { label: "DataHub GMS" }, { label: dataset }];
 }
 
 function openDrawer(name) {
@@ -1076,13 +1120,16 @@ function openDrawer(name) {
         (i ? '<span class="lin-arrow">──►</span>' : "") + `<span class="lin-node ${n.self ? "self" : ""}">${esc(n.label)}</span>`).join("") + "</div>"
     : '<div class="card-sub">No connections detected for this asset.</div>';
 
-  const drift = d.total !== a.risk_score
-    ? `<div class="drift-note">Reported score is <strong>${a.risk_score}</strong>, but these dimensions reconstruct <strong>${d.total}</strong>. This asset's score was not produced by the current scorer — treat the bars, not the total, as indicative.</div>`
-    : "";
+  const notes = [];
+  if (d.raw !== a.risk_score)
+    notes.push(`Reported score <strong>${a.risk_score}</strong> differs from the <strong>${d.raw}</strong> these fields produce — this asset's score did not come from the current scorer.`);
+  else if (d.total !== d.raw)
+    notes.push(`Dimensions are clamped for display, so they total <strong>${d.total}</strong>; the scorer's uncapped signals sum to <strong>${d.raw}</strong>.`);
+  const drift = notes.length ? `<div class="drift-note">${notes.join(" ")}</div>` : "";
 
   document.getElementById("drawer-body").innerHTML = `
     <div class="sec"><h4>Asset info</h4>${info}</div>
-    <div class="sec"><h4>Risk breakdown — ${d.total}/100</h4>${bars}${drift}</div>
+    <div class="sec"><h4>Risk breakdown — ${a.risk_score}/100</h4>${bars}${drift}</div>
     <div class="sec"><h4>Tools</h4><div class="chips">${toolChips}</div></div>
     ${keys}
     <div class="sec"><h4>🇪🇺 EU AI Act</h4>${eu}</div>
@@ -1090,7 +1137,7 @@ function openDrawer(name) {
     <div class="sec"><h4>Lineage</h4>${lineageHTML}</div>`;
 
   document.getElementById("drawer-seen").textContent = "Last seen: " + new Date().toLocaleString();
-  document.getElementById("drawer-datahub").href = "http://localhost:9002/entity/mlModel/" + encodeURIComponent(urnFor(a));
+  document.getElementById("drawer-datahub").href = DATAHUB_UI + "/entity/mlModel/" + urnFor(a);
   document.getElementById("drawer").classList.add("show");
   document.getElementById("overlay").classList.add("show");
 }
@@ -1183,16 +1230,41 @@ function saveSettings() {
   n.classList.add("show");
   setTimeout(() => n.classList.remove("show"), 1600);
 }
-function testConnection() {
+const PING_TIMEOUT = 3000;
+function probe(url, opts) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), PING_TIMEOUT);
+  return fetch(url, Object.assign({ signal: ctrl.signal, cache: "no-store" }, opts))
+    .finally(() => clearTimeout(timer));
+}
+
+async function testConnection() {
   const dot = document.getElementById("conn-dot");
   const lbl = document.getElementById("test-label");
+  const base = (document.getElementById("set-url").value || DATAHUB_GMS_DEFAULT).replace(/\/+$/, "");
+  const target = base + "/health";
+
+  const settle = (cls, text) => {
+    dot.className = "conn-dot " + cls;
+    lbl.textContent = text;
+    setTimeout(() => { dot.className = "conn-dot"; lbl.textContent = "Test Connection"; }, 4000);
+  };
+
   dot.className = "conn-dot pinging";
-  lbl.textContent = "Pinging…";
-  setTimeout(() => {
-    dot.className = "conn-dot ok";
-    lbl.textContent = "✓ Connected";
-    setTimeout(() => { dot.className = "conn-dot"; lbl.textContent = "Test Connection"; }, 2600);
-  }, 1200);
+  lbl.textContent = "Testing…";
+  try {
+    const res = await probe(target);
+    settle(res.ok ? "ok" : "bad", res.ok ? "✓ Connected" : "✗ Unreachable (HTTP " + res.status + ")");
+  } catch (err) {
+    /* A cross-origin GMS answers but the browser hides the response. An opaque
+       probe still distinguishes "host replied" from "nothing there". */
+    try {
+      await probe(target, { mode: "no-cors" });
+      settle("ok", "✓ Reachable (CORS blocked)");
+    } catch (e2) {
+      settle("bad", "✗ Unreachable");
+    }
+  }
 }
 
 /* ============================================================
