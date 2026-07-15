@@ -1,0 +1,70 @@
+{
+  "generated_by": "agentguard 0.1.0",
+  "regulation": "EU AI Act (Regulation 2024/1689)",
+  "applicable_from": "2026-08-02",
+  "scope_note": "General-purpose AI system obligations. Fields map to DataHub customProperties under the agentguard.eu_ai_act namespace.",
+  "assets": [
+    {
+      "name": "Ghost MCP",
+      "urn": "urn:li:mlModel:(urn:li:dataPlatform:mcp,ghost-mcp,PROD)",
+      "agentguard.eu_ai_act.owner": "unassigned",
+      "agentguard.eu_ai_act.data_access_scope": "filesystem,database,system",
+      "agentguard.eu_ai_act.disclosure_compliant": "false",
+      "agentguard.eu_ai_act.risk_category": "high-risk",
+      "findings": [
+        "No accountable owner registered (Art. 26 human oversight cannot be assigned).",
+        "Unauthenticated system-level access to filesystem and database.",
+        "Server is declared in configuration but unreachable: no operational logging (Art. 12)."
+      ],
+      "required_action": "Decommission or re-authenticate and assign an owner before 2026-08-02."
+    },
+    {
+      "name": "LangChain Agent",
+      "urn": "urn:li:mlModel:(urn:li:dataPlatform:mcp,langchain-agent,PROD)",
+      "agentguard.eu_ai_act.owner": "urn:li:corpuser:ml-platform",
+      "agentguard.eu_ai_act.data_access_scope": "filesystem,network,system",
+      "agentguard.eu_ai_act.disclosure_compliant": "false",
+      "agentguard.eu_ai_act.risk_category": "high-risk",
+      "findings": [
+        "Agent sends outbound email without a disclosure that content is AI-generated (Art. 50).",
+        "Shell execution tool grants agency beyond its documented purpose (Art. 9 risk management).",
+        "Three API credentials detected in the process environment."
+      ],
+      "required_action": "Add AI-generated content disclosure to outbound channels; scope down shell access."
+    },
+    {
+      "name": "Claude MCP",
+      "urn": "urn:li:mlModel:(urn:li:dataPlatform:mcp,claude-mcp,PROD)",
+      "agentguard.eu_ai_act.owner": "urn:li:corpuser:dev-tooling",
+      "agentguard.eu_ai_act.data_access_scope": "filesystem",
+      "agentguard.eu_ai_act.disclosure_compliant": "false",
+      "agentguard.eu_ai_act.risk_category": "limited-risk",
+      "findings": [
+        "Read access to source tree without authentication on a loopback port.",
+        "No access records retained for source files read by the model (Art. 12)."
+      ],
+      "required_action": "Enable authentication and retain access logs for the read path."
+    },
+    {
+      "name": "DataHub MCP",
+      "urn": "urn:li:mlModel:(urn:li:dataPlatform:mcp,datahub-mcp,PROD)",
+      "agentguard.eu_ai_act.owner": "urn:li:corpuser:data-governance",
+      "agentguard.eu_ai_act.data_access_scope": "application",
+      "agentguard.eu_ai_act.disclosure_compliant": "true",
+      "agentguard.eu_ai_act.risk_category": "minimal-risk",
+      "findings": [
+        "Bearer authentication enforced; owner assigned; read-only metadata scope."
+      ],
+      "required_action": "None. Compliant baseline."
+    }
+  ],
+  "summary": {
+    "total_assets": 4,
+    "high_risk": 2,
+    "limited_risk": 1,
+    "minimal_risk": 1,
+    "without_assigned_owner": 1,
+    "disclosure_compliant": 1,
+    "days_to_applicability_at_scan": 383
+  }
+}
