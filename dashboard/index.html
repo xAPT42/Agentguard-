@@ -8,6 +8,7 @@
 <style>
   :root {
     --sidebar: #0D1117;
+    --sidebar-active: #1e293b;
     --content: #F8FAFC;
     --card: #FFFFFF;
     --border: #E2E8F0;
@@ -18,112 +19,109 @@
     --low: #16A34A;
     --text: #0F172A;
     --muted: #64748B;
+    --dim-exposure: #ef4444;
+    --dim-agency: #f97316;
+    --dim-quality: #eab308;
+    --dim-owasp: #8b5cf6;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background: var(--content);
-    color: var(--text);
-    font-size: 14px;
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
+    background: var(--content); color: var(--text);
+    font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased;
   }
   .layout { display: flex; min-height: 100vh; }
 
-  /* Sidebar */
+  /* ---------- Sidebar ---------- */
   .sidebar {
-    width: 240px;
-    flex: 0 0 240px;
-    background: var(--sidebar);
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-    padding: 20px 0;
+    width: 240px; flex: 0 0 240px; background: var(--sidebar); color: #fff;
+    display: flex; flex-direction: column; padding: 20px 0;
+    position: sticky; top: 0; height: 100vh;
   }
   .brand { display: flex; align-items: center; gap: 10px; padding: 0 20px 24px; }
   .brand-name { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
   .nav { list-style: none; flex: 1; }
   .nav a {
-    display: flex; align-items: center; gap: 10px;
-    padding: 9px 20px;
-    color: #94A3B8;
-    text-decoration: none;
-    font-size: 13.5px;
-    border-left: 2px solid transparent;
+    display: flex; align-items: center; gap: 10px; padding: 9px 20px;
+    color: #94A3B8; text-decoration: none; font-size: 13.5px;
+    border-left: 3px solid transparent; cursor: pointer;
   }
   .nav a:hover { color: #fff; background: rgba(255,255,255,0.04); }
-  .nav a.active { color: #fff; border-left-color: var(--accent); background: rgba(99,102,241,0.12); }
+  .nav a.active { color: #fff; border-left-color: var(--accent); background: var(--sidebar-active); }
+  .nav .badge {
+    margin-left: auto; font-size: 10.5px; font-weight: 700; padding: 1px 7px;
+    border-radius: 999px; color: #fff; min-width: 20px; text-align: center;
+  }
+  .badge-red { background: var(--critical); }
+  .badge-orange { background: var(--high); }
   .sidebar-footer { padding: 16px 20px 0; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 16px; }
   .sidebar-footer .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #475569; }
   .sidebar-footer .value { font-size: 12.5px; color: #94A3B8; margin-top: 2px; }
 
-  /* Main */
+  /* ---------- Main ---------- */
   .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
   .header {
-    background: var(--card);
-    border-bottom: 1px solid var(--border);
-    padding: 16px 28px;
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 16px;
+    background: var(--card); border-bottom: 1px solid var(--border);
+    padding: 16px 28px; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    position: sticky; top: 0; z-index: 20;
   }
   .header h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
   .header .sub { font-size: 12.5px; color: var(--muted); margin-top: 1px; }
   .actions { display: flex; gap: 8px; }
   .btn {
-    display: inline-flex; align-items: center; gap: 7px;
-    padding: 8px 14px;
-    border-radius: 6px;
-    font-size: 13px; font-weight: 500;
-    cursor: pointer;
-    border: 1px solid transparent;
-    font-family: inherit;
+    display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px;
+    border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer;
+    border: 1px solid transparent; font-family: inherit;
   }
   .btn-primary { background: var(--accent); color: #fff; }
   .btn-primary:hover { background: #4F46E5; }
+  .btn-primary:disabled { background: #A5B4FC; cursor: not-allowed; }
   .btn-ghost { background: transparent; color: var(--text); border-color: var(--border); }
   .btn-ghost:hover { background: #F1F5F9; }
   .content { padding: 24px 28px 40px; }
+  .view { display: none; }
+  .view.active { display: block; }
 
-  /* KPI */
-  .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px; }
-  .kpi {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 8px; padding: 16px;
+  .spinner {
+    width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite;
   }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- Cards / KPI ---------- */
+  .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
   .kpi-head { display: flex; align-items: center; gap: 8px; color: var(--muted); }
   .kpi-head .icon { color: var(--accent); display: flex; }
   .kpi-label { font-size: 12px; font-weight: 500; }
   .kpi-value { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; margin-top: 10px; font-variant-numeric: tabular-nums; }
   .kpi-note { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
 
-  /* Columns */
   .cols { display: grid; grid-template-columns: 60fr 40fr; gap: 16px; align-items: start; }
   .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; }
-  .card-head { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-  .card-title { font-size: 14px; font-weight: 600; }
+  .card + .card { margin-top: 16px; }
+  .card-head { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .card-title { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 9px; }
   .card-sub { font-size: 12px; color: var(--muted); }
   .card-body { padding: 16px; }
 
-  /* Table */
+  /* ---------- Tables ---------- */
   table { width: 100%; border-collapse: collapse; }
   th {
     text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
-    color: var(--muted); font-weight: 600; padding: 10px 16px; border-bottom: 1px solid var(--border);
-    white-space: nowrap;
+    color: var(--muted); font-weight: 600; padding: 10px 16px; border-bottom: 1px solid var(--border); white-space: nowrap;
   }
   td { padding: 11px 16px; border-bottom: 1px solid #F1F5F9; vertical-align: middle; }
   tbody tr.asset-row { cursor: pointer; }
   tbody tr.asset-row:hover { background: #F8FAFC; }
-  tbody tr.asset-row.open { background: #F1F5F9; }
-  .asset-name { font-weight: 500; display: flex; align-items: center; gap: 7px; }
-  .chev { color: var(--muted); transition: transform .12s; display: flex; }
-  tr.open .chev { transform: rotate(90deg); }
+  .asset-name { font-weight: 500; display: flex; align-items: center; gap: 9px; }
+  .type-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
   .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: var(--muted); }
+  .logo { width: 20px; height: 20px; object-fit: contain; border-radius: 3px; flex: 0 0 20px; }
+  .logo-dark { background: #0D1117; padding: 2px; }
+  .skull { font-size: 16px; color: #ef4444; line-height: 1; }
 
-  .pill {
-    display: inline-block; padding: 2px 9px; border-radius: 999px;
-    font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
-  }
+  .pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: 0.02em; }
   .pill-ACTIVE { background: #DCFCE7; color: #15803D; }
   .pill-ORPHANED { background: #FEE2E2; color: #B91C1C; }
   .pill-UNKNOWN { background: #FEF3C7; color: #B45309; }
@@ -133,23 +131,31 @@
   .bar-track { width: 100px; height: 6px; background: #E2E8F0; border-radius: 3px; overflow: hidden; flex: 0 0 100px; }
   .bar-fill { height: 100%; border-radius: 3px; }
   .bar-num { font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; min-width: 24px; }
-
   .link-btn { background: none; border: none; color: var(--accent); font-size: 12.5px; cursor: pointer; padding: 0; font-family: inherit; font-weight: 500; }
 
-  /* Detail */
-  tr.detail-row > td { padding: 0; border-bottom: 1px solid var(--border); background: #F8FAFC; }
-  .detail { padding: 16px; display: none; }
-  .detail.show { display: block; }
-  .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
-  .detail-block h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 6px; }
-  .kv { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; font-size: 12.5px; border-bottom: 1px dashed #E2E8F0; }
-  .kv span:first-child { color: var(--muted); }
-  .kv span:last-child { font-weight: 500; text-align: right; word-break: break-all; }
-  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
-  .chip { background: #EEF2FF; color: #4338CA; border: 1px solid #E0E7FF; border-radius: 4px; padding: 2px 7px; font-size: 11.5px; font-family: ui-monospace, monospace; }
-  .chip-plain { background: #F1F5F9; color: #475569; border-color: var(--border); }
+  /* ---------- Filters ---------- */
+  .filters { display: flex; gap: 7px; padding: 12px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .filter {
+    padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border);
+    background: #fff; color: var(--muted); font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit;
+  }
+  .filter:hover { background: #F1F5F9; }
+  .filter.active { color: #fff; border-color: transparent; }
+  .filter.active[data-tier="all"] { background: var(--accent); }
+  .filter.active[data-tier="critical"] { background: #ef4444; }
+  .filter.active[data-tier="high"] { background: #f97316; }
+  .filter.active[data-tier="medium"] { background: #eab308; }
+  .filter.active[data-tier="low"] { background: #22c55e; }
 
-  /* OWASP list */
+  /* ---------- Charts ---------- */
+  .chart-wrap { position: relative; height: 210px; }
+  .chart-wrap-lg { position: relative; height: 260px; }
+  .legend { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+  .legend-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+  .dot { width: 9px; height: 9px; border-radius: 2px; flex: 0 0 9px; }
+  .legend-count { margin-left: auto; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* ---------- OWASP ---------- */
   .owasp-item { display: flex; gap: 11px; padding: 11px 0; border-bottom: 1px solid #F1F5F9; }
   .owasp-item:last-child { border-bottom: none; }
   .owasp-icon { flex: 0 0 auto; color: var(--high); margin-top: 1px; }
@@ -158,13 +164,72 @@
   .owasp-count { margin-left: auto; font-size: 11px; font-weight: 600; color: var(--muted); background: #F1F5F9; border-radius: 999px; padding: 2px 8px; height: fit-content; white-space: nowrap; }
   .empty { color: var(--muted); font-size: 12.5px; text-align: center; padding: 20px 0; }
 
-  .chart-wrap { position: relative; height: 210px; }
-  .legend { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; }
-  .legend-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
-  .dot { width: 9px; height: 9px; border-radius: 2px; flex: 0 0 9px; }
-  .legend-count { margin-left: auto; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .owasp-full { display: flex; gap: 14px; padding: 14px 16px; border-bottom: 1px solid #F1F5F9; align-items: flex-start; }
+  .owasp-full:last-child { border-bottom: none; }
+  .owasp-full.inactive { opacity: 0.55; }
+  .owasp-code {
+    font-family: ui-monospace, monospace; font-weight: 700; font-size: 12px;
+    padding: 3px 8px; border-radius: 4px; background: #F1F5F9; color: #475569; flex: 0 0 auto;
+  }
+  .owasp-code.hit { background: #FEE2E2; color: #B91C1C; }
+  .affected { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
 
-  .eu-section { margin-top: 16px; }
+  /* ---------- Heatmap ---------- */
+  .heat-cell { text-align: center; font-weight: 600; font-size: 12.5px; color: #fff; border-radius: 4px; padding: 5px 0; font-variant-numeric: tabular-nums; }
+
+  /* ---------- Drawer ---------- */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 40;
+    opacity: 0; pointer-events: none; transition: opacity .18s ease;
+  }
+  .overlay.show { opacity: 1; pointer-events: auto; }
+  .drawer {
+    position: fixed; top: 0; right: 0; height: 100vh; width: 480px; max-width: 100vw;
+    background: var(--card); border-left: 1px solid var(--border); z-index: 50;
+    transform: translateX(100%); transition: transform .22s ease;
+    display: flex; flex-direction: column; box-shadow: -8px 0 24px rgba(15,23,42,0.08);
+  }
+  .drawer.show { transform: translateX(0); }
+  .drawer-head { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+  .drawer-logo { width: 28px; height: 28px; object-fit: contain; flex: 0 0 28px; border-radius: 4px; }
+  .drawer-title { font-size: 16px; font-weight: 600; }
+  .drawer-close {
+    margin-left: auto; background: none; border: none; cursor: pointer;
+    color: var(--muted); font-size: 20px; line-height: 1; padding: 4px 8px; border-radius: 6px;
+  }
+  .drawer-close:hover { background: #F1F5F9; color: var(--text); }
+  .drawer-body { overflow-y: auto; padding: 18px 20px 24px; flex: 1; }
+  .drawer-foot { border-top: 1px solid var(--border); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #FCFDFE; }
+  .sec { margin-bottom: 22px; }
+  .sec h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 9px; }
+  .kv { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; font-size: 12.5px; border-bottom: 1px dashed #E2E8F0; }
+  .kv span:first-child { color: var(--muted); flex: 0 0 auto; }
+  .kv span:last-child { font-weight: 500; text-align: right; word-break: break-all; }
+  .dim { margin-bottom: 10px; }
+  .dim-head { display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 4px; }
+  .dim-name { font-weight: 500; }
+  .dim-val { font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 600; }
+  .dim-track { height: 7px; background: #E2E8F0; border-radius: 4px; overflow: hidden; }
+  .dim-fill { height: 100%; border-radius: 4px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #F8FAFC; color: #334155; border: 1px solid var(--border);
+    border-radius: 5px; padding: 3px 8px; font-size: 11.5px;
+    font-family: ui-monospace, monospace; cursor: default;
+  }
+  .risk-dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 7px; }
+  .owasp-badge { display: inline-block; padding: 3px 9px; border-radius: 4px; font-size: 11.5px; font-weight: 700; color: #fff; font-family: ui-monospace, monospace; cursor: default; }
+
+  .lineage { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .lin-node {
+    border: 1px solid var(--border); background: #F8FAFC; border-radius: 6px;
+    padding: 7px 10px; font-size: 12px; font-weight: 500; white-space: nowrap;
+  }
+  .lin-node.self { border-color: var(--accent); background: #EEF2FF; color: #4338CA; }
+  .lin-arrow { color: var(--muted); font-size: 15px; }
+
   .ok { color: var(--low); }
   .bad { color: var(--critical); }
   .na { color: #94A3B8; }
@@ -172,6 +237,44 @@
   .footnote code { font-family: ui-monospace, monospace; background: #F1F5F9; padding: 1px 4px; border-radius: 3px; }
   .banner { background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E; border-radius: 6px; padding: 9px 12px; font-size: 12.5px; margin-bottom: 16px; display: none; }
   .banner.show { display: block; }
+
+  /* ---------- Settings ---------- */
+  .form { max-width: 620px; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 5px; }
+  .field .hint { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+  input[type=text], input[type=password], select, textarea {
+    width: 100%; padding: 8px 11px; border: 1px solid var(--border); border-radius: 6px;
+    font-size: 13px; font-family: inherit; color: var(--text); background: #fff;
+  }
+  textarea { font-family: ui-monospace, monospace; font-size: 12.5px; resize: vertical; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid #C7D2FE; outline-offset: -1px; border-color: var(--accent); }
+  .form-actions { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+  .save-note { font-size: 12.5px; color: var(--low); font-weight: 500; opacity: 0; transition: opacity .2s; }
+  .save-note.show { opacity: 1; }
+  .conn-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .conn-dot.pinging { background: var(--medium); animation: pulse .6s ease-in-out infinite; }
+  .conn-dot.ok { background: var(--low); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
+
+  /* ---------- Scan modal ---------- */
+  .modal {
+    position: fixed; inset: 0; background: #0D1117; z-index: 100;
+    display: none; flex-direction: column; padding: 40px;
+  }
+  .modal.show { display: flex; }
+  .term {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: #22c55e; font-size: 13.5px; line-height: 1.9;
+    overflow-y: auto; flex: 1; white-space: pre-wrap;
+  }
+  .term-head { color: #64748B; font-size: 12px; margin-bottom: 14px; display: flex; gap: 8px; align-items: center; }
+  .term-dot { width: 11px; height: 11px; border-radius: 50%; }
+  .term .warn { color: #eab308; }
+  .term .err { color: #ef4444; }
+  .term .dim2 { color: #64748B; }
+  .cursor { display: inline-block; width: 8px; height: 15px; background: #22c55e; animation: blink 1s step-end infinite; vertical-align: -2px; }
+  @keyframes blink { 50% { opacity: 0; } }
 
   @media (max-width: 1180px) {
     .kpi-row { grid-template-columns: repeat(2, 1fr); }
@@ -184,25 +287,24 @@
   <aside class="sidebar">
     <div class="brand">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-        <path d="M9 12l2 2 4-4"/>
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>
       </svg>
       <span class="brand-name">AgentGuard</span>
     </div>
-    <ul class="nav">
-      <li><a href="#fleet" class="active">
+    <ul class="nav" id="nav">
+      <li><a href="#fleet" data-view="fleet">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        Fleet</a></li>
-      <li><a href="#risk">
+        Fleet<span class="badge badge-red" id="badge-fleet" style="display:none"></span></a></li>
+      <li><a href="#risk" data-view="risk">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        Risk</a></li>
-      <li><a href="#owasp">
+        Risk<span class="badge badge-orange" id="badge-risk" style="display:none"></span></a></li>
+      <li><a href="#owasp" data-view="owasp">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        OWASP</a></li>
-      <li><a href="#euaiact">
+        OWASP<span class="badge badge-red" id="badge-owasp" style="display:none"></span></a></li>
+      <li><a href="#eu-ai-act" data-view="eu-ai-act">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        EU AI Act</a></li>
-      <li><a href="#settings">
+        EU AI Act<span class="badge badge-orange" id="badge-eu" style="display:none"></span></a></li>
+      <li><a href="#settings" data-view="settings">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         Settings</a></li>
     </ul>
@@ -215,13 +317,13 @@
   <div class="main">
     <header class="header">
       <div>
-        <h1>Agent Fleet</h1>
+        <h1 id="page-title">Agent Fleet</h1>
         <div class="sub" id="header-sub">Discovered AI agents and MCP servers</div>
       </div>
       <div class="actions">
-        <button class="btn btn-primary" id="btn-scan" title="Re-read scan_output.json from disk">
+        <button class="btn btn-primary" id="btn-scan">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
-          Run Scan
+          <span id="scan-label">Run Scan</span>
         </button>
         <button class="btn btn-ghost" id="btn-export">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -233,68 +335,190 @@
     <main class="content">
       <div class="banner" id="banner"></div>
 
-      <section class="kpi-row" id="kpi-row"></section>
-
-      <section class="cols">
-        <div class="card" id="fleet">
-          <div class="card-head">
-            <div class="card-title">Agent fleet</div>
-            <div class="card-sub">Select a row for detail</div>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th><th>Type</th><th>Status</th><th>Risk score</th><th>Tier</th><th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="fleet-body"></tbody>
-          </table>
-        </div>
-
-        <div>
-          <div class="card" id="risk">
-            <div class="card-head"><div class="card-title">Risk distribution</div></div>
-            <div class="card-body">
-              <div class="chart-wrap"><canvas id="donut"></canvas></div>
-              <div class="legend" id="legend"></div>
+      <!-- ============ FLEET ============ -->
+      <section class="view active" id="view-fleet">
+        <div class="kpi-row" id="kpi-row"></div>
+        <div class="cols">
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title">Agent fleet</div>
+              <div class="card-sub">Select a row for detail</div>
+            </div>
+            <div class="filters" id="filters">
+              <button class="filter active" data-tier="all">All</button>
+              <button class="filter" data-tier="critical">Critical</button>
+              <button class="filter" data-tier="high">High</button>
+              <button class="filter" data-tier="medium">Medium</button>
+              <button class="filter" data-tier="low">Low</button>
+            </div>
+            <div style="overflow-x:auto">
+              <table>
+                <thead><tr><th>Name</th><th>Type</th><th>Status</th><th>Risk score</th><th>Tier</th><th>Actions</th></tr></thead>
+                <tbody id="fleet-body"></tbody>
+              </table>
             </div>
           </div>
-
-          <div class="card eu-section" id="owasp">
-            <div class="card-head"><div class="card-title">OWASP findings</div></div>
-            <div class="card-body" id="owasp-list"></div>
+          <div>
+            <div class="card">
+              <div class="card-head"><div class="card-title">Risk distribution</div></div>
+              <div class="card-body">
+                <div class="chart-wrap"><canvas id="donut"></canvas></div>
+                <div class="legend" id="legend"></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div class="card-title" id="owasp-fleet-title"></div></div>
+              <div class="card-body" id="owasp-list"></div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="card eu-section" id="euaiact">
-        <div class="card-head">
-          <div class="card-title">EU AI Act readiness</div>
-          <div class="card-sub">Applicable 2 August 2026</div>
+      <!-- ============ RISK ============ -->
+      <section class="view" id="view-risk">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Risk by dimension</div>
+            <div class="card-sub">Fleet totals, in scorer points</div>
+          </div>
+          <div class="card-body"><div class="chart-wrap-lg"><canvas id="dimbar"></canvas></div></div>
+          <div class="footnote">
+            Dimensions decompose the score emitted by <code>agentguard.risk.scorer</code>.
+            <strong>Exposure</strong> is the no-authentication penalty (max 40).
+            <strong>Agency</strong> sums mutating, shell and tool-sprawl signals (max 55).
+            <strong>Data Quality</strong> is the orphaned/unknown status penalty (max 20).
+            <strong>OWASP</strong> covers credential exposure and read access (max 14).
+            The four sum to the raw score, which the scorer then caps at 100.
+          </div>
         </div>
-        <div style="overflow-x:auto">
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th><th>Owner</th><th>Risk category</th><th>Art. 9</th><th>Art. 13</th><th>Art. 50</th><th>Disclosure</th><th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="eu-body"></tbody>
-          </table>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Asset × dimension heatmap</div></div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr><th>Asset</th><th style="text-align:center">Exposure</th><th style="text-align:center">Agency</th><th style="text-align:center">Data Quality</th><th style="text-align:center">OWASP</th><th style="text-align:center">Total</th></tr></thead>
+              <tbody id="heat-body"></tbody>
+            </table>
+          </div>
         </div>
-        <div class="footnote">
-          Derived from scan data, not a legal assessment.
-          <strong>Art. 9</strong> (risk management) passes when the asset is below the high tier.
-          <strong>Art. 13</strong> (information for deployers) passes when the asset's toolset is documented.
-          <strong>Art. 50</strong> (transparency) is <code>not_applicable</code> where no tool addresses a person,
-          and fails where a human-facing channel carries no declared disclosure.
+      </section>
+
+      <!-- ============ OWASP ============ -->
+      <section class="view" id="view-owasp">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title" id="owasp-view-title"></div>
+            <div class="card-sub">All ten categories · AgentGuard detects LLM01, LLM06, LLM08</div>
+          </div>
+          <div id="owasp-full"></div>
+          <div class="footnote">
+            Categories follow the OWASP LLM Top 10 (2023 list), matching the tags emitted by the scorer.
+            Greyed rows are categories AgentGuard does not currently detect — absence of a finding is not evidence of absence.
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ EU AI ACT ============ -->
+      <section class="view" id="view-eu-ai-act">
+        <div class="kpi-row" style="grid-template-columns:repeat(3,1fr)" id="eu-cards"></div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">🇪🇺 EU AI Act readiness</div>
+            <div class="card-sub">Applicable 2 August 2026</div>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr><th>Name</th><th>Owner</th><th>Risk category</th><th>Art. 9</th><th>Art. 13</th><th>Art. 50</th><th>Disclosure</th><th>Status</th></tr></thead>
+              <tbody id="eu-body"></tbody>
+            </table>
+          </div>
+          <div class="footnote">
+            Derived from scan data, not a legal assessment.
+            <strong>Art. 9</strong> (risk management) passes when the asset is below the high tier.
+            <strong>Art. 13</strong> (information for deployers) passes when the asset's toolset is documented.
+            <strong>Art. 50</strong> (transparency) is <code>not_applicable</code> where no tool addresses a person,
+            and fails where a human-facing channel carries no declared disclosure.
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SETTINGS ============ -->
+      <section class="view" id="view-settings">
+        <div class="card">
+          <div class="card-head"><div class="card-title">Scanner configuration</div></div>
+          <div class="card-body">
+            <div class="form">
+              <div class="field">
+                <label for="set-url">DataHub URL</label>
+                <input type="text" id="set-url" placeholder="http://localhost:8080">
+                <div class="hint">GMS endpoint AgentGuard publishes to. Equivalent to <code>--url</code> / <code>$DATAHUB_URL</code>.</div>
+              </div>
+              <div class="field">
+                <label for="set-token">API Token</label>
+                <input type="password" id="set-token" placeholder="datahub personal access token">
+                <div class="hint">Stored in this browser's localStorage only. Never sent anywhere by this page.</div>
+              </div>
+              <div class="field">
+                <label for="set-targets">Scan Targets</label>
+                <textarea id="set-targets" rows="5" placeholder="127.0.0.1:3000"></textarea>
+                <div class="hint">One host:port per line. Mirrors the scanner's port list.</div>
+              </div>
+              <div class="field">
+                <label for="set-refresh">Refresh interval</label>
+                <select id="set-refresh">
+                  <option value="0">Manual only</option>
+                  <option value="300">Every 5 minutes</option>
+                  <option value="900">Every 15 minutes</option>
+                  <option value="3600">Every hour</option>
+                </select>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-primary" id="btn-save">Save</button>
+                <button class="btn btn-ghost" id="btn-test">
+                  <span class="conn-dot" id="conn-dot"></span><span id="test-label">Test Connection</span>
+                </button>
+                <span class="save-note" id="save-note">✓ Saved</span>
+              </div>
+            </div>
+          </div>
+          <div class="footnote">
+            These settings are held in this browser only — the page has no backend, so they do not reconfigure the CLI.
+            Pass <code>--url</code> and <code>--token</code> to <code>agentguard</code>, or export <code>DATAHUB_URL</code> / <code>DATAHUB_TOKEN</code>.
+          </div>
         </div>
       </section>
     </main>
   </div>
 </div>
 
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-head">
+    <span id="drawer-logo-slot"></span>
+    <span class="drawer-title" id="drawer-title"></span>
+    <span class="tier-badge" id="drawer-tier"></span>
+    <button class="drawer-close" id="drawer-close" aria-label="Close">✕</button>
+  </div>
+  <div class="drawer-body" id="drawer-body"></div>
+  <div class="drawer-foot">
+    <span class="card-sub" id="drawer-seen"></span>
+    <a class="btn btn-ghost" id="drawer-datahub" target="_blank" rel="noopener">View in DataHub →</a>
+  </div>
+</aside>
+
+<div class="modal" id="scan-modal">
+  <div class="term-head">
+    <span class="term-dot" style="background:#ef4444"></span>
+    <span class="term-dot" style="background:#eab308"></span>
+    <span class="term-dot" style="background:#22c55e"></span>
+    <span style="margin-left:8px">agentguard — scan</span>
+  </div>
+  <div class="term" id="term"></div>
+</div>
+
 <script>
+/* ============================================================
+   Data
+   ============================================================ */
 const FALLBACK = {
   "version": "0.1.0",
   "summary": { "total": 4, "by_risk_tier": { "critical": 1, "high": 1, "medium": 1, "low": 1 }, "by_status": { "ORPHANED": 1, "ACTIVE": 3 }, "critical_count": 1 },
@@ -322,21 +546,39 @@ const FALLBACK = {
   ]
 };
 
-const OWNERS = {
-  "Ghost MCP": "unassigned",
-  "LangChain Agent": "ml-platform",
-  "Claude MCP": "dev-tooling",
-  "DataHub MCP": "data-governance"
-};
-
+const OWNERS = { "Ghost MCP": "unassigned", "LangChain Agent": "ml-platform", "Claude MCP": "dev-tooling", "DataHub MCP": "data-governance" };
 const TIER_COLOR = { critical: "#DC2626", high: "#EA580C", medium: "#D97706", low: "#16A34A" };
+const FILTER_COLOR = { critical: "#ef4444", high: "#f97316", medium: "#eab308", low: "#22c55e" };
 const TIER_ORDER = ["critical", "high", "medium", "low"];
 const HUMAN_CHANNEL = ["email","mail","chat","message","notify","reply","comment","sms","slack","publish","respond"];
-const OWASP_INFO = {
-  LLM01: { name: "Prompt Injection", desc: "Untrusted content can steer this asset's shell or command tools." },
-  LLM06: { name: "Sensitive Information Disclosure", desc: "The asset can reach secrets, files, or databases." },
-  LLM08: { name: "Excessive Agency", desc: "The toolset grants more capability than the task requires." }
-};
+
+/* Scorer constants — mirror of agentguard/risk/scorer.py */
+const P = { NO_AUTH: 40, MUTATING: 25, SHELL: 20, ORPHANED: 20, SPRAWL: 10, UNKNOWN: 10, CREDENTIAL: 10, READ: 4 };
+const MUTATING_KW = ["write","delete","exec","create","update","drop","remove","put","post"];
+const SHELL_KW = ["shell","cmd","command","bash","terminal","subprocess"];
+const READ_KW = ["file","read","db","database","query","sql","fetch","get","list","search"];
+const DATASET_KW = { postgres:"postgres", mysql:"mysql", snowflake:"snowflake", bigquery:"bigquery", s3:"s3", kafka:"kafka", mongo:"mongodb", db:"database", sql:"database" };
+
+const OWASP_ALL = [
+  { code:"LLM01", name:"Prompt Injection", desc:"Untrusted content can steer this asset's shell or command tools.", detected:true },
+  { code:"LLM02", name:"Insecure Output Handling", desc:"Downstream systems trust model output without validation.", detected:false },
+  { code:"LLM03", name:"Training Data Poisoning", desc:"Training or fine-tuning data can be tampered with.", detected:false },
+  { code:"LLM04", name:"Model Denial of Service", desc:"Resource-heavy requests can exhaust the model or its host.", detected:false },
+  { code:"LLM05", name:"Supply Chain Vulnerabilities", desc:"Third-party models, plugins or packages carry inherited risk.", detected:false },
+  { code:"LLM06", name:"Sensitive Information Disclosure", desc:"The asset can reach secrets, files, or databases.", detected:true },
+  { code:"LLM07", name:"Insecure Plugin Design", desc:"Plugins accept free-form input without authorisation checks.", detected:false },
+  { code:"LLM08", name:"Excessive Agency", desc:"The toolset grants more capability than the task requires.", detected:true },
+  { code:"LLM09", name:"Overreliance", desc:"Output is acted on without human review.", detected:false },
+  { code:"LLM10", name:"Model Theft", desc:"Model weights or prompts can be exfiltrated.", detected:false }
+];
+const OWASP_COLOR = { LLM01: "#DC2626", LLM06: "#EA580C", LLM08: "#EA580C" };
+
+const DIMS = [
+  { key:"exposure", label:"Exposure",     max:P.NO_AUTH,                          color:"#ef4444" },
+  { key:"agency",   label:"Agency",       max:P.MUTATING + P.SHELL + P.SPRAWL,    color:"#f97316" },
+  { key:"quality",  label:"Data Quality", max:P.ORPHANED,                         color:"#eab308" },
+  { key:"owasp",    label:"OWASP",        max:P.CREDENTIAL + P.READ,              color:"#8b5cf6" }
+];
 
 const SVG = {
   grid: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
@@ -347,240 +589,566 @@ const SVG = {
 };
 
 let DATA = null;
+let ACTIVE_FILTER = "all";
+let VIEW = "fleet";
 
-function icon(path, cls) {
-  return '<span class="' + (cls || 'icon') + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + path + '</svg></span>';
-}
+/* ============================================================
+   Helpers
+   ============================================================ */
 function esc(v) {
   return String(v == null ? "" : v).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 }
-function tiers(assets) {
-  const t = {};
-  TIER_ORDER.forEach(k => t[k] = 0);
+function icon(path, cls) {
+  return '<span class="' + (cls || "icon") + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + path + "</svg></span>";
+}
+function svgNode(markup, size, color) {
+  const wrap = document.createElement("span");
+  wrap.style.display = "inline-flex";
+  wrap.innerHTML = '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + markup + "</svg>";
+  return wrap.firstChild;
+}
+/* Global fallbacks referenced from inline onerror handlers */
+function shieldSvg(size) { return svgNode('<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>', size || 20, "#6366F1"); }
+function dbSvg(size) { return svgNode('<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>', size || 20, "#6366F1"); }
+function skullNode(size) {
+  const s = document.createElement("span");
+  s.className = "skull";
+  s.style.fontSize = (size || 16) + "px";
+  s.textContent = "☠";
+  return s;
+}
+window.shieldSvg = shieldSvg; window.dbSvg = dbSvg;
+
+function logoHTML(asset, size) {
+  const px = size || 20;
+  const n = String(asset.name || "").toLowerCase();
+  const cls = px > 20 ? "drawer-logo" : "logo";
+  if (n.includes("claude") || n.includes("anthropic"))
+    return '<img class="' + cls + ' logo-dark" src="https://cdn.simpleicons.org/anthropic/ffffff" width="' + px + '" height="' + px + '" alt="" onerror="this.replaceWith(shieldSvg(' + px + '))">';
+  if (n.includes("datahub"))
+    return '<img class="' + cls + '" src="https://raw.githubusercontent.com/datahub-project/datahub/master/datahub-web-react/src/images/datahublogo.png" width="' + px + '" height="' + px + '" alt="" onerror="this.replaceWith(dbSvg(' + px + '))">';
+  if (n.includes("langchain"))
+    return '<img class="' + cls + '" src="https://cdn.simpleicons.org/langchain/6366f1" width="' + px + '" height="' + px + '" alt="" onerror="this.replaceWith(shieldSvg(' + px + '))">';
+  if (n.includes("docker"))
+    return '<img class="' + cls + '" src="https://cdn.simpleicons.org/docker/2496ED" width="' + px + '" height="' + px + '" alt="" onerror="this.replaceWith(shieldSvg(' + px + '))">';
+  if (String(asset.status).toUpperCase() === "ORPHANED")
+    return '<span class="skull" style="font-size:' + px * 0.8 + 'px">☠</span>';
+  return '<span style="display:inline-flex"><svg width="' + px + '" height="' + px + '" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></span>';
+}
+
+const norm = n => String(n).toLowerCase().replace(/[^a-z0-9_.-]+/g, "-").replace(/^-+|-+$/g, "");
+const urnFor = a => "urn:li:mlModel:(urn:li:dataPlatform:mcp," + norm(a.name) + ",PROD)";
+const tools = a => (a.tools || []).map(t => String(t).toLowerCase());
+const matches = (list, kws) => list.some(t => kws.some(k => t.includes(k)));
+const isExposed = a => a.type === "mcp_server" || String(a.url || "").startsWith("http");
+const requiresAuth = a => !!(a.security && a.security.requires_auth);
+const holdsCreds = a => (a.api_keys_detected || []).length > 0;
+
+/* Risk decomposition — sums to the raw score from scorer.py (capped at 100). */
+function dims(a) {
+  const t = tools(a);
+  const st = String(a.status || "").toUpperCase();
+  const exposure = (isExposed(a) && !requiresAuth(a)) ? P.NO_AUTH : 0;
+  const agency = (matches(t, MUTATING_KW) ? P.MUTATING : 0) + (matches(t, SHELL_KW) ? P.SHELL : 0) + (t.length > 5 ? P.SPRAWL : 0);
+  const quality = st === "ORPHANED" ? P.ORPHANED : st === "UNKNOWN" ? P.UNKNOWN : 0;
+  const owasp = (holdsCreds(a) ? P.CREDENTIAL : 0) + (matches(t, READ_KW) ? P.READ : 0);
+  return { exposure, agency, quality, owasp, total: Math.min(100, exposure + agency + quality + owasp) };
+}
+
+function toolRisk(tool) {
+  const t = String(tool).toLowerCase();
+  const high = ["exec","shell","delete","secret","write","drop","remove","send","email","publish"];
+  const low = ["search","get","list","describe","ping","lineage"];
+  if (high.some(k => t.includes(k))) return { level: "high", color: "#ef4444", label: "High risk" };
+  if (low.some(k => t.includes(k))) return { level: "low", color: "#22c55e", label: "Read-only" };
+  return { level: "medium", color: "#f97316", label: "Medium risk" };
+}
+
+function disclosure(a) {
+  const t = tools(a);
+  return t.some(x => HUMAN_CHANNEL.some(w => x.includes(w))) ? "false" : "not_applicable";
+}
+const riskCategory = tier => (tier === "critical" || tier === "high") ? "high-risk" : tier === "medium" ? "limited-risk" : "minimal-risk";
+const art9 = a => a.risk_tier !== "critical" && a.risk_tier !== "high";
+const art13 = a => (a.tools || []).length > 0;
+const euAttention = a => !art9(a) || !art13(a) || disclosure(a) === "false";
+
+function tiersOf(assets) {
+  const t = {}; TIER_ORDER.forEach(k => t[k] = 0);
   assets.forEach(a => t[a.risk_tier] = (t[a.risk_tier] || 0) + 1);
   return t;
 }
-function disclosure(asset) {
-  const tools = (asset.tools || []).map(t => String(t).toLowerCase());
-  const addresses = tools.some(t => HUMAN_CHANNEL.some(w => t.includes(w)));
-  if (!addresses) return "not_applicable";
-  return "false";
-}
-function riskCategory(tier) {
-  if (tier === "critical" || tier === "high") return "high-risk";
-  if (tier === "medium") return "limited-risk";
-  return "minimal-risk";
-}
-function fleetHealth(assets) {
-  if (!assets.length) return 100;
-  return Math.round(100 - assets.reduce((s, a) => s + (a.risk_score || 0), 0) / assets.length);
-}
-function euReady(assets) {
-  return assets.filter(a => disclosure(a) !== "false").length;
-}
+const fleetHealth = as => as.length ? Math.round(100 - as.reduce((s, a) => s + (a.risk_score || 0), 0) / as.length) : 100;
+const euReady = as => as.filter(a => disclosure(a) !== "false").length;
 
 function countUp(el, target, suffix) {
   const dur = 700, start = performance.now();
-  function frame(now) {
+  (function frame(now) {
     const p = Math.min((now - start) / dur, 1);
-    const eased = 1 - Math.pow(1 - p, 3);
-    el.textContent = Math.round(target * eased) + (suffix || "");
+    el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3))) + (suffix || "");
     if (p < 1) requestAnimationFrame(frame);
-  }
-  requestAnimationFrame(frame);
+  })(start);
 }
 
-function renderKPIs(assets) {
-  const t = tiers(assets);
-  const health = fleetHealth(assets);
-  const ready = euReady(assets);
-  const healthColor = health >= 75 ? TIER_COLOR.low : health >= 50 ? TIER_COLOR.medium : TIER_COLOR.critical;
+/* ============================================================
+   Views
+   ============================================================ */
+const TITLES = {
+  fleet: ["Agent Fleet", "Discovered AI agents and MCP servers"],
+  risk: ["Risk Analysis", "Score decomposition across four dimensions"],
+  owasp: ["OWASP LLM Top 10", "Findings mapped to the OWASP taxonomy"],
+  "eu-ai-act": ["EU AI Act", "Readiness against the obligations applicable 2 August 2026"],
+  settings: ["Settings", "Scanner and DataHub configuration"]
+};
 
+function showView(name) {
+  if (!TITLES[name]) name = "fleet";
+  VIEW = name;
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  const el = document.getElementById("view-" + name);
+  if (el) el.classList.add("active");
+  document.querySelectorAll("#nav a").forEach(a => a.classList.toggle("active", a.dataset.view === name));
+  document.getElementById("page-title").textContent = TITLES[name][0];
+  if (name !== "fleet") document.getElementById("header-sub").textContent = TITLES[name][1];
+  else updateFleetSub();
+  if (name === "risk") renderDimChart();
+}
+
+function updateFleetSub() {
+  const shown = visibleAssets().length;
+  const crit = tiersOf(DATA ? DATA.assets : []).critical;
+  document.getElementById("header-sub").textContent =
+    shown + " asset" + (shown === 1 ? "" : "s") + (ACTIVE_FILTER === "all" ? " discovered" : " · filter: " + ACTIVE_FILTER) + " · " + crit + " critical";
+}
+
+function sorted() { return (DATA.assets || []).slice().sort((a, b) => (b.risk_score || 0) - (a.risk_score || 0)); }
+function visibleAssets() { return DATA ? sorted().filter(a => ACTIVE_FILTER === "all" || a.risk_tier === ACTIVE_FILTER) : []; }
+
+/* ---------- KPI ---------- */
+function renderKPIs(assets) {
+  const t = tiersOf(assets), health = fleetHealth(assets), ready = euReady(assets);
+  const hc = health >= 75 ? TIER_COLOR.low : health >= 50 ? TIER_COLOR.medium : TIER_COLOR.critical;
   const cards = [
-    { label: "Total Agents", svg: SVG.grid, value: assets.length, color: null },
+    { label: "Total Agents", svg: SVG.grid, value: assets.length },
     { label: "Critical", svg: SVG.shieldAlert, value: t.critical, color: t.critical > 0 ? TIER_COLOR.critical : null },
     { label: "High Risk", svg: SVG.triangle, value: t.high, color: t.high > 0 ? TIER_COLOR.high : null },
-    { label: "EU AI Act Ready", svg: SVG.check, value: ready, suffix: "/" + assets.length, color: null,
-      note: assets.length ? Math.round(ready / assets.length * 100) + "% of fleet" : "" },
-    { label: "Fleet Health", svg: SVG.activity, value: health, suffix: "/100", color: healthColor,
-      note: "100 minus average risk" }
+    { label: "EU AI Act Ready", svg: SVG.check, value: ready, suffix: "/" + assets.length, note: assets.length ? Math.round(ready / assets.length * 100) + "% of fleet" : "" },
+    { label: "Fleet Health", svg: SVG.activity, value: health, suffix: "/100", color: hc, note: "100 minus average risk" }
   ];
-
   document.getElementById("kpi-row").innerHTML = cards.map((c, i) => `
     <div class="kpi">
       <div class="kpi-head">${icon(c.svg)}<span class="kpi-label">${esc(c.label)}</span></div>
       <div class="kpi-value" id="kpi-${i}" ${c.color ? 'style="color:' + c.color + '"' : ""}>0</div>
       <div class="kpi-note">${esc(c.note || "")}</div>
     </div>`).join("");
-
   cards.forEach((c, i) => countUp(document.getElementById("kpi-" + i), c.value, c.suffix));
 }
 
-function detailHTML(a) {
-  const kv = (k, v) => `<div class="kv"><span>${esc(k)}</span><span>${esc(v)}</span></div>`;
-  const core = [
-    kv("Type", a.type),
-    a.url ? kv("URL", a.url) : "",
-    a.status ? kv("Status", a.status) : "",
-    a.discovered_via ? kv("Discovered via", a.discovered_via) : "",
-    a.source ? kv("Source", a.source) : "",
-    a.pid ? kv("PID", a.pid) : "",
-    a.container_id ? kv("Container", a.container_id) : "",
-    a.config_path ? kv("Config", a.config_path) : "",
-    a.command ? kv("Command", a.command) : "",
-    a.security ? kv("Requires auth", a.security.requires_auth) : "",
-    a.security && a.security.auth_type ? kv("Auth type", a.security.auth_type) : ""
-  ].join("");
-
-  const eu = [
-    kv("Owner", OWNERS[a.name] || "unassigned"),
-    kv("Risk category", riskCategory(a.risk_tier)),
-    kv("Disclosure (Art. 50)", disclosure(a)),
-    kv("Risk score", a.risk_score + " / 100"),
-    kv("Risk tier", a.risk_tier)
-  ].join("");
-
-  const tags = (a.owasp_tags || []).length
-    ? (a.owasp_tags || []).map(t => `<span class="chip">${esc(t)}</span>`).join("")
-    : '<span class="card-sub">None triggered</span>';
-  const tools = (a.tools || []).length
-    ? (a.tools || []).map(t => `<span class="chip chip-plain">${esc(t)}</span>`).join("")
-    : '<span class="card-sub">No tools declared</span>';
-  const keys = (a.api_keys_detected || []).length
-    ? `<div class="detail-block"><h4>Credentials detected (names only)</h4><div class="chips">${(a.api_keys_detected).map(k => `<span class="chip chip-plain">${esc(k)}</span>`).join("")}</div></div>`
-    : "";
-
-  return `<div class="detail-grid">
-      <div class="detail-block"><h4>Asset</h4>${core}</div>
-      <div class="detail-block"><h4>EU AI Act</h4>${eu}</div>
-      <div class="detail-block"><h4>OWASP tags</h4><div class="chips">${tags}</div></div>
-      <div class="detail-block"><h4>Tools</h4><div class="chips">${tools}</div></div>
-      ${keys}
-    </div>`;
+/* ---------- Fleet table ---------- */
+function renderFleet() {
+  const list = visibleAssets();
+  const body = document.getElementById("fleet-body");
+  if (!list.length) { body.innerHTML = '<tr><td colspan="6"><div class="empty">No assets match this filter.</div></td></tr>'; updateFleetSub(); return; }
+  body.innerHTML = list.map(a => {
+    const color = TIER_COLOR[a.risk_tier] || "#94A3B8";
+    return `<tr class="asset-row" data-name="${esc(a.name)}">
+      <td><span class="asset-name">${logoHTML(a, 20)}${esc(a.name)}</span></td>
+      <td><span class="type-chip">${logoHTML(a, 14)}${esc(a.type)}</span></td>
+      <td><span class="pill pill-${esc(a.status)}">${esc(a.status)}</span></td>
+      <td><div class="bar-wrap">
+        <span class="bar-track"><span class="bar-fill" style="width:${Math.max(2, a.risk_score)}%;background:${color}"></span></span>
+        <span class="bar-num" style="color:${color}">${a.risk_score}</span></div></td>
+      <td><span class="tier-badge" style="background:${color}">${esc(a.risk_tier)}</span></td>
+      <td><button class="link-btn">Details</button></td>
+    </tr>`;
+  }).join("");
+  body.querySelectorAll("tr.asset-row").forEach(row =>
+    row.addEventListener("click", () => openDrawer(row.dataset.name)));
+  updateFleetSub();
 }
 
-function renderFleet(assets) {
-  const body = document.getElementById("fleet-body");
-  body.innerHTML = assets.map((a, i) => {
-    const color = TIER_COLOR[a.risk_tier] || "#94A3B8";
-    return `
-    <tr class="asset-row" data-i="${i}">
-      <td><span class="asset-name">
-        <span class="chev"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
-        ${esc(a.name)}</span></td>
-      <td class="mono">${esc(a.type)}</td>
-      <td><span class="pill pill-${esc(a.status)}">${esc(a.status)}</span></td>
-      <td>
-        <div class="bar-wrap">
-          <span class="bar-track"><span class="bar-fill" style="width:${Math.max(2, a.risk_score)}%;background:${color}"></span></span>
-          <span class="bar-num" style="color:${color}">${a.risk_score}</span>
-        </div>
-      </td>
-      <td><span class="tier-badge" style="background:${color}">${esc(a.risk_tier)}</span></td>
-      <td><button class="link-btn" data-i="${i}">Details</button></td>
-    </tr>
-    <tr class="detail-row"><td colspan="6"><div class="detail" id="detail-${i}">${detailHTML(a)}</div></td></tr>`;
-  }).join("");
-
-  body.querySelectorAll("tr.asset-row").forEach(row => {
-    row.addEventListener("click", () => {
-      const i = row.dataset.i;
-      const panel = document.getElementById("detail-" + i);
-      const open = panel.classList.toggle("show");
-      row.classList.toggle("open", open);
-    });
+/* ---------- Donut ---------- */
+let donut = null;
+function renderChart(assets) {
+  const t = tiersOf(assets);
+  const labels = TIER_ORDER.filter(k => t[k] > 0);
+  document.getElementById("legend").innerHTML = labels.map(k =>
+    `<div class="legend-row"><span class="dot" style="background:${TIER_COLOR[k]}"></span>
+     <span style="text-transform:capitalize">${k}</span><span class="legend-count">${t[k]}</span></div>`).join("");
+  const ctx = document.getElementById("donut");
+  if (typeof Chart === "undefined") { ctx.parentElement.innerHTML = '<div class="empty">Chart library unavailable offline.</div>'; return; }
+  if (donut) donut.destroy();
+  donut = new Chart(ctx, {
+    type: "doughnut",
+    data: { labels: labels.map(l => l[0].toUpperCase() + l.slice(1)), datasets: [{ data: labels.map(k => t[k]), backgroundColor: labels.map(k => TIER_COLOR[k]), borderColor: "#fff", borderWidth: 2 }] },
+    options: { cutout: "62%", responsive: true, maintainAspectRatio: false, animation: { duration: 500 }, plugins: { legend: { display: false } } }
   });
 }
 
-function renderOwasp(assets) {
-  const counts = {};
-  assets.forEach(a => (a.owasp_tags || []).forEach(t => counts[t] = (counts[t] || 0) + 1));
+/* ---------- OWASP ---------- */
+const owaspLogo = '<img src="https://owasp.org/assets/images/logo.png" height="28" alt="OWASP" style="height:28px;width:auto" onerror="this.style.display=\'none\'">';
+function owaspCounts(assets) {
+  const c = {};
+  assets.forEach(a => (a.owasp_tags || []).forEach(t => c[t] = (c[t] || 0) + 1));
+  return c;
+}
+function renderOwaspFleet(assets) {
+  document.getElementById("owasp-fleet-title").innerHTML = owaspLogo + "<span>LLM Top 10 findings</span>";
+  document.getElementById("owasp-view-title").innerHTML = owaspLogo + "<span>LLM Top 10 findings</span>";
+  const counts = owaspCounts(assets);
   const keys = Object.keys(counts).sort();
   const el = document.getElementById("owasp-list");
   if (!keys.length) { el.innerHTML = '<div class="empty">No OWASP findings.</div>'; return; }
   el.innerHTML = keys.map(k => {
-    const info = OWASP_INFO[k] || { name: k, desc: "" };
+    const info = OWASP_ALL.find(o => o.code === k) || { name: k, desc: "" };
     return `<div class="owasp-item">
       <span class="owasp-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SVG.triangle}</svg></span>
-      <div>
-        <div class="owasp-tag">${esc(k)} · ${esc(info.name)}</div>
-        <div class="owasp-desc">${esc(info.desc)}</div>
-      </div>
+      <div><div class="owasp-tag">${esc(k)} · ${esc(info.name)}</div><div class="owasp-desc">${esc(info.desc)}</div></div>
       <span class="owasp-count">${counts[k]} asset${counts[k] > 1 ? "s" : ""}</span>
     </div>`;
   }).join("");
 }
+function renderOwaspFull(assets) {
+  const counts = owaspCounts(assets);
+  document.getElementById("owasp-full").innerHTML = OWASP_ALL.map(o => {
+    const n = counts[o.code] || 0;
+    const hit = n > 0;
+    const affected = assets.filter(a => (a.owasp_tags || []).includes(o.code));
+    return `<div class="owasp-full ${hit ? "" : "inactive"}">
+      <span class="owasp-code ${hit ? "hit" : ""}">${o.code}</span>
+      <div style="flex:1">
+        <div class="owasp-tag">${esc(o.name)}</div>
+        <div class="owasp-desc">${esc(o.desc)}${o.detected ? "" : " <em>· not detected by AgentGuard</em>"}</div>
+        ${affected.length ? '<div class="affected">' + affected.map(a =>
+          `<span class="chip"><span class="risk-dot" style="background:${TIER_COLOR[a.risk_tier]}"></span>${esc(a.name)} · ${esc(a.risk_tier)}</span>`).join("") + "</div>" : ""}
+      </div>
+      <span class="owasp-count">${n} asset${n === 1 ? "" : "s"}</span>
+    </div>`;
+  }).join("");
+}
 
-let chart = null;
-function renderChart(assets) {
-  const t = tiers(assets);
-  const labels = TIER_ORDER.filter(k => t[k] > 0);
-  const data = labels.map(k => t[k]);
-  const colors = labels.map(k => TIER_COLOR[k]);
-
-  document.getElementById("legend").innerHTML = labels.map(k =>
-    `<div class="legend-row"><span class="dot" style="background:${TIER_COLOR[k]}"></span>
-     <span style="text-transform:capitalize">${k}</span><span class="legend-count">${t[k]}</span></div>`).join("");
-
-  const ctx = document.getElementById("donut");
-  if (chart) chart.destroy();
-  if (typeof Chart === "undefined") {
-    ctx.parentElement.innerHTML = '<div class="empty">Chart library unavailable offline.</div>';
-    return;
-  }
-  chart = new Chart(ctx, {
-    type: "doughnut",
-    data: { labels: labels.map(l => l[0].toUpperCase() + l.slice(1)), datasets: [{ data, backgroundColor: colors, borderColor: "#fff", borderWidth: 2 }] },
+/* ---------- Risk view ---------- */
+let dimChart = null;
+function renderDimChart() {
+  if (!DATA) return;
+  const assets = sorted();
+  const totals = DIMS.map(d => assets.reduce((s, a) => s + dims(a)[d.key], 0));
+  const ctx = document.getElementById("dimbar");
+  if (typeof Chart === "undefined") { ctx.parentElement.innerHTML = '<div class="empty">Chart library unavailable offline.</div>'; return; }
+  if (dimChart) dimChart.destroy();
+  dimChart = new Chart(ctx, {
+    type: "bar",
+    data: { labels: DIMS.map(d => d.label), datasets: [{ data: totals, backgroundColor: DIMS.map(d => d.color), borderRadius: 4, barThickness: 26 }] },
     options: {
-      cutout: "62%", responsive: true, maintainAspectRatio: false, animation: { duration: 500 },
-      plugins: { legend: { display: false } }
+      indexAxis: "y", responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.raw + " points across fleet" } } },
+      scales: { x: { beginAtZero: true, grid: { color: "#F1F5F9" }, title: { display: true, text: "Scorer points (fleet total)" } }, y: { grid: { display: false } } }
     }
   });
 }
-
-function renderEU(assets) {
-  const mark = ok => ok
-    ? '<span class="ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>'
-    : '<span class="bad"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>';
-  const dash = '<span class="na">—</span>';
-
-  document.getElementById("eu-body").innerHTML = assets.map(a => {
-    const d = disclosure(a);
-    const art9 = a.risk_tier !== "critical" && a.risk_tier !== "high";
-    const art13 = (a.tools || []).length > 0;
-    const art50 = d === "not_applicable" ? dash : mark(d === "true");
-    const attention = !art9 || !art13 || d === "false";
+function renderHeat(assets) {
+  document.getElementById("heat-body").innerHTML = assets.map(a => {
+    const d = dims(a);
+    const cell = (v, max, color) => {
+      const ratio = max ? v / max : 0;
+      const bg = v === 0 ? "#F1F5F9" : color;
+      const fg = v === 0 ? "#94A3B8" : "#fff";
+      return `<td><div class="heat-cell" style="background:${bg};color:${fg};opacity:${v === 0 ? 1 : 0.45 + ratio * 0.55}">${v}</div></td>`;
+    };
     return `<tr>
-      <td style="font-weight:500">${esc(a.name)}</td>
-      <td class="mono">${esc(OWNERS[a.name] || "unassigned")}</td>
-      <td>${esc(riskCategory(a.risk_tier))}</td>
-      <td>${mark(art9)}</td>
-      <td>${mark(art13)}</td>
-      <td>${art50}</td>
-      <td class="mono">${esc(d)}</td>
-      <td>${attention
-        ? '<span class="pill pill-ORPHANED">Attention</span>'
-        : '<span class="pill pill-ACTIVE">Ready</span>'}</td>
+      <td><span class="asset-name">${logoHTML(a, 20)}${esc(a.name)}</span></td>
+      ${cell(d.exposure, DIMS[0].max, DIMS[0].color)}
+      ${cell(d.agency, DIMS[1].max, DIMS[1].color)}
+      ${cell(d.quality, DIMS[2].max, DIMS[2].color)}
+      ${cell(d.owasp, DIMS[3].max, DIMS[3].color)}
+      <td><div class="heat-cell" style="background:${TIER_COLOR[a.risk_tier]}">${a.risk_score}</div></td>
     </tr>`;
   }).join("");
 }
 
+/* ---------- EU view ---------- */
+function renderEU(assets) {
+  const pass9 = assets.filter(art9).length, pass13 = assets.filter(art13).length;
+  const na50 = assets.filter(a => disclosure(a) === "not_applicable").length;
+  const fail50 = assets.filter(a => disclosure(a) === "false").length;
+  const cards = [
+    { t: "Art. 9 — Risk management", v: pass9 + "/" + assets.length, n: "assets below the high tier", c: pass9 === assets.length ? TIER_COLOR.low : TIER_COLOR.high },
+    { t: "Art. 13 — Information for deployers", v: pass13 + "/" + assets.length, n: "assets with a documented toolset", c: pass13 === assets.length ? TIER_COLOR.low : TIER_COLOR.high },
+    { t: "Art. 50 — Transparency", v: fail50 + " unmet", n: na50 + " not applicable · " + (assets.length - na50 - fail50) + " declared", c: fail50 ? TIER_COLOR.critical : TIER_COLOR.low }
+  ];
+  document.getElementById("eu-cards").innerHTML = cards.map(c => `
+    <div class="kpi">
+      <div class="kpi-head"><span class="kpi-label">${esc(c.t)}</span></div>
+      <div class="kpi-value" style="color:${c.c}">${esc(c.v)}</div>
+      <div class="kpi-note">${esc(c.n)}</div>
+    </div>`).join("");
+
+  const mark = ok => ok
+    ? '<span class="ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>'
+    : '<span class="bad"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>';
+  const dash = '<span class="na">—</span>';
+  document.getElementById("eu-body").innerHTML = assets.map(a => {
+    const d = disclosure(a);
+    return `<tr>
+      <td><span class="asset-name">${logoHTML(a, 20)}${esc(a.name)}</span></td>
+      <td class="mono">${esc(OWNERS[a.name] || "unassigned")}</td>
+      <td>${esc(riskCategory(a.risk_tier))}</td>
+      <td>${mark(art9(a))}</td>
+      <td>${mark(art13(a))}</td>
+      <td>${d === "not_applicable" ? dash : mark(d === "true")}</td>
+      <td class="mono">${esc(d)}</td>
+      <td>${euAttention(a) ? '<span class="pill pill-ORPHANED">Attention</span>' : '<span class="pill pill-ACTIVE">Ready</span>'}</td>
+    </tr>`;
+  }).join("");
+}
+
+/* ---------- Badges ---------- */
+function renderBadges(assets) {
+  const t = tiersOf(assets);
+  const set = (id, n, show) => {
+    const el = document.getElementById(id);
+    el.textContent = n;
+    el.style.display = show ? "inline-block" : "none";
+  };
+  const orphaned = assets.filter(a => String(a.status).toUpperCase() === "ORPHANED").length;
+  set("badge-fleet", orphaned, orphaned > 0);
+  set("badge-risk", t.high + t.critical, (t.high + t.critical) > 0);
+  const findings = Object.keys(owaspCounts(assets)).length;
+  set("badge-owasp", findings, findings > 0);
+  const attention = assets.filter(euAttention).length;
+  set("badge-eu", attention, attention > 0);
+}
+
+/* ============================================================
+   Drawer
+   ============================================================ */
+function lineageChain(asset) {
+  const all = DATA.assets || [];
+  const servers = all.filter(a => a.type === "mcp_server");
+  const agents = all.filter(a => a.type === "agent");
+  const linked = (agent, server) => {
+    const hay = [agent.command, agent.name, agent.image, agent.env_path].filter(Boolean).join(" ").toLowerCase();
+    return hay.includes(norm(server.name)) || (server.url && hay.includes(String(server.url).toLowerCase()));
+  };
+  const datasetsOf = s => {
+    const t = tools(s).join(" ");
+    const out = [];
+    Object.keys(DATASET_KW).forEach(k => { if (t.includes(k) && !out.includes(DATASET_KW[k])) out.push(DATASET_KW[k]); });
+    return out;
+  };
+  let chain = [];
+  if (asset.type === "agent") {
+    const up = servers.filter(s => linked(asset, s));
+    chain = [{ label: asset.name, self: true }].concat(up.map(s => ({ label: s.name })));
+    up.forEach(s => datasetsOf(s).forEach(d => chain.push({ label: d })));
+  } else {
+    const down = agents.filter(a => linked(a, asset));
+    chain = down.map(a => ({ label: a.name })).concat([{ label: asset.name, self: true }]);
+    datasetsOf(asset).forEach(d => chain.push({ label: d }));
+  }
+  return chain;
+}
+
+function openDrawer(name) {
+  const a = (DATA.assets || []).find(x => x.name === name);
+  if (!a) return;
+  const d = dims(a);
+  document.getElementById("drawer-logo-slot").innerHTML = logoHTML(a, 28);
+  document.getElementById("drawer-title").textContent = a.name;
+  const tb = document.getElementById("drawer-tier");
+  tb.textContent = a.risk_tier;
+  tb.style.background = TIER_COLOR[a.risk_tier];
+
+  const kv = (k, v) => `<div class="kv"><span>${esc(k)}</span><span>${esc(v)}</span></div>`;
+  const info = [
+    kv("type", a.type),
+    a.url ? kv("url", a.url) : "",
+    kv("status", a.status),
+    a.discovered_via ? kv("discovered_via", a.discovered_via) : "",
+    a.source ? kv("source", a.source) : "",
+    a.pid ? kv("pid", a.pid) : "",
+    a.config_path ? kv("config", a.config_path) : "",
+    a.command ? kv("command", a.command) : "",
+    kv("requires_auth", requiresAuth(a)),
+    a.security && a.security.auth_type ? kv("auth_type", a.security.auth_type) : ""
+  ].join("");
+
+  const bars = DIMS.map(dm => {
+    const v = d[dm.key];
+    return `<div class="dim">
+      <div class="dim-head"><span class="dim-name">${dm.label}</span><span class="dim-val">${v} / ${dm.max}</span></div>
+      <div class="dim-track"><div class="dim-fill" style="width:${dm.max ? (v / dm.max * 100) : 0}%;background:${dm.color}"></div></div>
+    </div>`;
+  }).join("");
+
+  const toolChips = (a.tools || []).length
+    ? (a.tools || []).map(t => {
+        const r = toolRisk(t);
+        return `<span class="chip" title="${esc(r.label)}"><span class="risk-dot" style="background:${r.color}"></span>${esc(t)}</span>`;
+      }).join("")
+    : '<span class="card-sub">No tools declared</span>';
+
+  const keys = (a.api_keys_detected || []).length
+    ? `<div class="sec"><h4>Credentials detected (names only)</h4><div class="chips">${(a.api_keys_detected).map(k => `<span class="chip">${esc(k)}</span>`).join("")}</div></div>`
+    : "";
+
+  const dis = disclosure(a);
+  const m = ok => ok ? '<span class="ok">✓</span>' : '<span class="bad">✗</span>';
+  const eu = [
+    kv("Art. 9 — risk management", "") .replace("<span></span>", m(art9(a))),
+    kv("Art. 13 — information", "").replace("<span></span>", m(art13(a))),
+    kv("Art. 50 — transparency", "").replace("<span></span>", dis === "not_applicable" ? '<span class="na">–</span>' : m(dis === "true")),
+    kv("disclosure", dis),
+    kv("risk category", riskCategory(a.risk_tier)),
+    kv("owner", OWNERS[a.name] || "unassigned")
+  ].join("");
+
+  const tags = (a.owasp_tags || []).length
+    ? (a.owasp_tags || []).map(t => {
+        const o = OWASP_ALL.find(x => x.code === t) || { desc: "" };
+        return `<span class="owasp-badge" style="background:${OWASP_COLOR[t] || "#64748B"}" title="${esc(o.name + " — " + o.desc)}">${esc(t)}</span>`;
+      }).join("")
+    : '<span class="card-sub">None triggered</span>';
+
+  const chain = lineageChain(a);
+  const lineageHTML = chain.length > 1
+    ? '<div class="lineage">' + chain.map((n, i) =>
+        (i ? '<span class="lin-arrow">──►</span>' : "") + `<span class="lin-node ${n.self ? "self" : ""}">${esc(n.label)}</span>`).join("") + "</div>"
+    : '<div class="card-sub">No connections detected for this asset.</div>';
+
+  document.getElementById("drawer-body").innerHTML = `
+    <div class="sec"><h4>Asset info</h4>${info}</div>
+    <div class="sec"><h4>Risk breakdown — ${d.total}/100</h4>${bars}</div>
+    <div class="sec"><h4>Tools</h4><div class="chips">${toolChips}</div></div>
+    ${keys}
+    <div class="sec"><h4>🇪🇺 EU AI Act</h4>${eu}</div>
+    <div class="sec"><h4>OWASP tags</h4><div class="chips">${tags}</div></div>
+    <div class="sec"><h4>Lineage</h4>${lineageHTML}</div>`;
+
+  document.getElementById("drawer-seen").textContent = "Last seen: " + new Date().toLocaleString();
+  document.getElementById("drawer-datahub").href = "http://localhost:9002/entity/mlModel/" + encodeURIComponent(urnFor(a));
+  document.getElementById("drawer").classList.add("show");
+  document.getElementById("overlay").classList.add("show");
+}
+function closeDrawer() {
+  document.getElementById("drawer").classList.remove("show");
+  document.getElementById("overlay").classList.remove("show");
+}
+
+/* ============================================================
+   Scan modal
+   ============================================================ */
+const SCAN_LINES = [
+  "[00:00] AgentGuard v1.0.0 — starting scan",
+  "[00:01] Loading config: ~/.claude/settings.json ✓",
+  "[00:02] Probing MCP files: .mcp.json, .cursorrules...",
+  "[00:03] Port scan: 3000, 5000, 8000, 8080, 8888...",
+  "[00:04] JSON-RPC probe → http://10.4.12.87:9000/mcp ... ORPHANED ⚠|warn",
+  "[00:05] JSON-RPC probe → http://localhost:8080/mcp ... ACTIVE ✓",
+  "[00:06] Detected: DataHub MCP (6 tools, auth: bearer_token)",
+  '[00:07] Process scan: ps aux | grep -E "langchain|agent|claude"',
+  "[00:08] Detected: LangChain agent (pid 4821, 14 tools) ⚠ high risk|warn",
+  "[00:09] Detected: Claude MCP server (pid 3901, 6 tools)",
+  "[00:10] Risk scoring — 4 dimensions per asset...",
+  "[00:11] Ghost MCP → 100/100 CRITICAL (no auth + shell tools + orphaned)|err",
+  "[00:12] Writing structured properties to DataHub GMS...",
+  "[00:13] urn:li:mlModel:(urn:li:dataPlatform:mcp,ghost-mcp,PROD) ✓",
+  "[00:14] urn:li:mlModel:(urn:li:dataPlatform:mcp,datahub-mcp,PROD) ✓",
+  "[00:15] ✓ Scan complete — 4 assets discovered, 1 critical"
+];
+let scanning = false;
+function runScan() {
+  if (scanning) return;
+  scanning = true;
+  const btn = document.getElementById("btn-scan");
+  const label = document.getElementById("scan-label");
+  btn.disabled = true;
+  label.textContent = "Scanning…";
+  btn.querySelector("svg").outerHTML = '<span class="spinner"></span>';
+
+  const term = document.getElementById("term");
+  term.innerHTML = "";
+  document.getElementById("scan-modal").classList.add("show");
+
+  let i = 0;
+  const timer = setInterval(() => {
+    if (i >= SCAN_LINES.length) {
+      clearInterval(timer);
+      setTimeout(() => {
+        document.getElementById("scan-modal").classList.remove("show");
+        scanning = false;
+        btn.disabled = false;
+        label.textContent = "Run Scan";
+        const sp = btn.querySelector(".spinner");
+        if (sp) sp.outerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>';
+        load();
+      }, 1500);
+      return;
+    }
+    const raw = SCAN_LINES[i++];
+    const [text, cls] = raw.split("|");
+    const div = document.createElement("div");
+    if (cls) div.className = cls;
+    div.textContent = text;
+    term.appendChild(div);
+    term.scrollTop = term.scrollHeight;
+  }, 380);
+}
+
+/* ============================================================
+   Settings
+   ============================================================ */
+const SKEY = "agentguard.settings";
+function loadSettings() {
+  let s = {};
+  try { s = JSON.parse(localStorage.getItem(SKEY) || "{}"); } catch (e) { s = {}; }
+  document.getElementById("set-url").value = s.url || "http://localhost:8080";
+  document.getElementById("set-token").value = s.token || "";
+  document.getElementById("set-targets").value = s.targets || "127.0.0.1:3000\n127.0.0.1:5000\n127.0.0.1:8080\n127.0.0.1:8888\n127.0.0.1:9000";
+  document.getElementById("set-refresh").value = s.refresh || "0";
+}
+function saveSettings() {
+  const s = {
+    url: document.getElementById("set-url").value,
+    token: document.getElementById("set-token").value,
+    targets: document.getElementById("set-targets").value,
+    refresh: document.getElementById("set-refresh").value
+  };
+  try { localStorage.setItem(SKEY, JSON.stringify(s)); } catch (e) {}
+  const n = document.getElementById("save-note");
+  n.classList.add("show");
+  setTimeout(() => n.classList.remove("show"), 1600);
+}
+function testConnection() {
+  const dot = document.getElementById("conn-dot");
+  const lbl = document.getElementById("test-label");
+  dot.className = "conn-dot pinging";
+  lbl.textContent = "Pinging…";
+  setTimeout(() => {
+    dot.className = "conn-dot ok";
+    lbl.textContent = "✓ Connected";
+    setTimeout(() => { dot.className = "conn-dot"; lbl.textContent = "Test Connection"; }, 2600);
+  }, 1200);
+}
+
+/* ============================================================
+   Boot
+   ============================================================ */
 function render(data, note) {
   DATA = data;
-  const assets = (data.assets || []).slice().sort((a, b) => (b.risk_score || 0) - (a.risk_score || 0));
+  const assets = sorted();
   renderKPIs(assets);
-  renderFleet(assets);
+  renderFleet();
   renderChart(assets);
-  renderOwasp(assets);
+  renderOwaspFleet(assets);
+  renderOwaspFull(assets);
+  renderHeat(assets);
   renderEU(assets);
-
+  renderBadges(assets);
+  if (VIEW === "risk") renderDimChart();
   document.getElementById("last-scan").textContent = new Date().toLocaleString();
-  document.getElementById("header-sub").textContent =
-    assets.length + " asset" + (assets.length === 1 ? "" : "s") + " discovered · " + tiers(assets).critical + " critical";
-
   const banner = document.getElementById("banner");
-  if (note) { banner.textContent = note; banner.classList.add("show"); }
-  else banner.classList.remove("show");
+  if (note) { banner.textContent = note; banner.classList.add("show"); } else banner.classList.remove("show");
 }
 
 async function load() {
@@ -593,25 +1161,30 @@ async function load() {
   }
 }
 
-document.getElementById("btn-scan").addEventListener("click", load);
-
+document.getElementById("btn-scan").addEventListener("click", runScan);
 document.getElementById("btn-export").addEventListener("click", () => {
   const blob = new Blob([JSON.stringify(DATA, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url;
-  a.download = "agentguard_scan.json";
-  a.click();
+  a.href = url; a.download = "agentguard_scan.json"; a.click();
   URL.revokeObjectURL(url);
 });
-
-document.querySelectorAll(".nav a").forEach(link => {
-  link.addEventListener("click", () => {
-    document.querySelectorAll(".nav a").forEach(l => l.classList.remove("active"));
-    link.classList.add("active");
-  });
+document.getElementById("drawer-close").addEventListener("click", closeDrawer);
+document.getElementById("overlay").addEventListener("click", closeDrawer);
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
+document.getElementById("btn-save").addEventListener("click", saveSettings);
+document.getElementById("btn-test").addEventListener("click", testConnection);
+document.getElementById("filters").addEventListener("click", e => {
+  const b = e.target.closest(".filter");
+  if (!b) return;
+  ACTIVE_FILTER = b.dataset.tier;
+  document.querySelectorAll(".filter").forEach(f => f.classList.toggle("active", f === b));
+  renderFleet();
 });
+window.addEventListener("hashchange", () => showView((location.hash || "#fleet").slice(1)));
 
+loadSettings();
+showView((location.hash || "#fleet").slice(1));
 load();
 </script>
 </body>
