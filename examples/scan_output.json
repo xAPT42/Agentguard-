@@ -1,16 +1,16 @@
 {
   "version": "0.1.0",
   "summary": {
-    "total": 4,
+    "total": 9,
     "by_risk_tier": {
       "critical": 1,
-      "high": 1,
-      "medium": 1,
-      "low": 1
+      "high": 2,
+      "medium": 4,
+      "low": 2
     },
     "by_status": {
-      "ORPHANED": 1,
-      "ACTIVE": 3
+      "ORPHANED": 2,
+      "ACTIVE": 7
     },
     "critical_count": 1
   },
@@ -72,6 +72,29 @@
       ]
     },
     {
+      "type": "agent",
+      "name": "OpenAI GPT Agent",
+      "status": "ACTIVE",
+      "source": "process",
+      "tools": [
+        "chat_completion",
+        "embeddings",
+        "file_search"
+      ],
+      "security": {
+        "requires_auth": true,
+        "auth_type": "api_key"
+      },
+      "risk_score": 55,
+      "risk_tier": "high",
+      "owasp_tags": [
+        "LLM06"
+      ],
+      "eu_ai_act": {
+        "disclosure_compliant": "false"
+      }
+    },
+    {
       "type": "mcp_server",
       "name": "Claude MCP",
       "url": "http://127.0.0.1:3000",
@@ -91,6 +114,93 @@
       "owasp_tags": [
         "LLM06"
       ]
+    },
+    {
+      "type": "agent",
+      "name": "Mistral Local Agent",
+      "status": "ACTIVE",
+      "source": "process",
+      "tools": [
+        "chat",
+        "function_call"
+      ],
+      "security": {
+        "requires_auth": false,
+        "auth_type": null
+      },
+      "risk_score": 42,
+      "risk_tier": "medium",
+      "owasp_tags": [
+        "LLM01"
+      ],
+      "eu_ai_act": {
+        "disclosure_compliant": "not_applicable"
+      }
+    },
+    {
+      "type": "agent",
+      "name": "HuggingFace Inference",
+      "status": "ACTIVE",
+      "source": "process",
+      "tools": [
+        "text_generation",
+        "classification"
+      ],
+      "security": {
+        "requires_auth": true,
+        "auth_type": "api_key"
+      },
+      "risk_score": 30,
+      "risk_tier": "medium",
+      "owasp_tags": [],
+      "eu_ai_act": {
+        "disclosure_compliant": "not_applicable"
+      }
+    },
+    {
+      "type": "vector_store",
+      "name": "Qdrant Search",
+      "status": "ORPHANED",
+      "discovered_via": "config",
+      "url": "http://10.4.12.90:6333",
+      "tools": [
+        "search",
+        "upsert"
+      ],
+      "security": {
+        "requires_auth": false,
+        "auth_type": null
+      },
+      "risk_score": 25,
+      "risk_tier": "medium",
+      "owasp_tags": [],
+      "eu_ai_act": {
+        "disclosure_compliant": "not_applicable"
+      }
+    },
+    {
+      "type": "vector_store",
+      "name": "Chroma VectorDB",
+      "status": "ACTIVE",
+      "discovered_via": "port_scan",
+      "url": "http://127.0.0.1:8000",
+      "tools": [
+        "query_collection",
+        "insert",
+        "delete"
+      ],
+      "security": {
+        "requires_auth": false,
+        "auth_type": null
+      },
+      "risk_score": 18,
+      "risk_tier": "low",
+      "owasp_tags": [
+        "LLM06"
+      ],
+      "eu_ai_act": {
+        "disclosure_compliant": "not_applicable"
+      }
     },
     {
       "type": "mcp_server",

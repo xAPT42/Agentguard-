@@ -211,6 +211,10 @@
   .dim-val { font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 600; }
   .dim-track { height: 7px; background: #E2E8F0; border-radius: 4px; overflow: hidden; }
   .dim-fill { height: 100%; border-radius: 4px; }
+  .drift-note {
+    margin-top: 10px; padding: 8px 10px; border-radius: 5px; font-size: 11.5px;
+    background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E;
+  }
 
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip {
@@ -619,21 +623,49 @@ function skullNode(size) {
 }
 window.shieldSvg = shieldSvg; window.dbSvg = dbSvg;
 
+/* Ordered longest-key-first so "huggingface" wins before "hf".
+   `dark: true` puts a #0D1117 plate behind white-on-transparent marks.
+   Vendors without a usable Simple Icons mark resolve to the inline shield. */
+const LOGOS = [
+  { keys: ["anthropic", "claude"], src: "https://cdn.simpleicons.org/anthropic/ffffff", dark: true },
+  { keys: ["huggingface", "hugging face", "hf"], src: "https://cdn.simpleicons.org/huggingface/FFD21E" },
+  { keys: ["langchain"], src: "https://cdn.simpleicons.org/langchain/6366f1" },
+  { keys: ["postgresql", "postgres", "pg"], src: "https://cdn.simpleicons.org/postgresql/4169E1" },
+  { keys: ["pinecone"], src: "https://cdn.simpleicons.org/pinecone/000000" },
+  { keys: ["datahub"], src: "https://raw.githubusercontent.com/datahub-project/datahub/master/datahub-web-react/src/images/datahublogo.png", db: true },
+  { keys: ["openai", "gpt"], src: "https://cdn.simpleicons.org/openai/ffffff", dark: true },
+  { keys: ["docker"], src: "https://cdn.simpleicons.org/docker/2496ED" },
+  { keys: ["github"], src: "https://cdn.simpleicons.org/github/ffffff", dark: true },
+  { keys: ["redis"], src: "https://cdn.simpleicons.org/redis/FF4438" }
+];
+/* Known vendors with no exploitable mark — shield, no network request. */
+const LOGO_SHIELD = ["mistral", "ollama", "chroma", "qdrant"];
+
+function getLogo(name) {
+  const n = String(name || "").toLowerCase();
+  if (LOGO_SHIELD.some(k => n.includes(k))) return null;
+  for (const entry of LOGOS) {
+    if (entry.keys.some(k => n.includes(k))) return entry;
+  }
+  return null;
+}
+
+function shieldHTML(px) {
+  return '<span style="display:inline-flex;flex:0 0 ' + px + 'px"><svg width="' + px + '" height="' + px + '" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></span>';
+}
+
 function logoHTML(asset, size) {
   const px = size || 20;
-  const n = String(asset.name || "").toLowerCase();
   const cls = px > 20 ? "drawer-logo" : "logo";
-  if (n.includes("claude") || n.includes("anthropic"))
-    return '<img class="' + cls + ' logo-dark" src="https://cdn.simpleicons.org/anthropic/ffffff" width="' + px + '" height="' + px + '" alt="" onerror="this.replaceWith(shieldSvg(' + px + '))">';
-  if (n.includes("datahub"))
-    return '<img class="' + cls + '" src="https://raw.githubusercontent.com/datahub-project/datahub/master/datahub-web-react/src/images/datahublogo.png" width="' + px + '" height="' + px + '" alt="" onerror="this.replaceWith(dbSvg(' + px + '))">';
-  if (n.includes("langchain"))
-    return '<img class="' + cls + '" src="https://cdn.simpleicons.org/langchain/6366f1" width="' + px + '" height="' + px + '" alt="" onerror="this.replaceWith(shieldSvg(' + px + '))">';
-  if (n.includes("docker"))
-    return '<img class="' + cls + '" src="https://cdn.simpleicons.org/docker/2496ED" width="' + px + '" height="' + px + '" alt="" onerror="this.replaceWith(shieldSvg(' + px + '))">';
+  const entry = getLogo(asset.name);
+  if (entry) {
+    const fb = entry.db ? "dbSvg" : "shieldSvg";
+    return '<img class="' + cls + (entry.dark ? " logo-dark" : "") + '" src="' + entry.src +
+      '" width="' + px + '" height="' + px + '" alt="" onerror="this.replaceWith(' + fb + "(" + px + '))">';
+  }
   if (String(asset.status).toUpperCase() === "ORPHANED")
-    return '<span class="skull" style="font-size:' + px * 0.8 + 'px">☠</span>';
-  return '<span style="display:inline-flex"><svg width="' + px + '" height="' + px + '" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></span>';
+    return '<span class="skull" style="font-size:' + Math.round(px * 0.8) + 'px">☠</span>';
+  return shieldHTML(px);
 }
 
 const norm = n => String(n).toLowerCase().replace(/[^a-z0-9_.-]+/g, "-").replace(/^-+|-+$/g, "");
@@ -664,7 +696,12 @@ function toolRisk(tool) {
   return { level: "medium", color: "#f97316", label: "Medium risk" };
 }
 
+/* An explicit value on the asset wins; otherwise infer from the toolset,
+   mirroring _disclosure_compliant() in agentguard/datahub/writer.py. */
 function disclosure(a) {
+  const declared = (a.eu_ai_act || {}).disclosure_compliant;
+  if (declared !== undefined && declared !== null) return String(declared);
+  if (a.disclosure_declared !== undefined) return a.disclosure_declared ? "true" : "false";
   const t = tools(a);
   return t.some(x => HUMAN_CHANNEL.some(w => x.includes(w))) ? "false" : "not_applicable";
 }
@@ -1016,9 +1053,13 @@ function openDrawer(name) {
         (i ? '<span class="lin-arrow">──►</span>' : "") + `<span class="lin-node ${n.self ? "self" : ""}">${esc(n.label)}</span>`).join("") + "</div>"
     : '<div class="card-sub">No connections detected for this asset.</div>';
 
+  const drift = d.total !== a.risk_score
+    ? `<div class="drift-note">Reported score is <strong>${a.risk_score}</strong>, but these dimensions reconstruct <strong>${d.total}</strong>. This asset's score was not produced by the current scorer — treat the bars, not the total, as indicative.</div>`
+    : "";
+
   document.getElementById("drawer-body").innerHTML = `
     <div class="sec"><h4>Asset info</h4>${info}</div>
-    <div class="sec"><h4>Risk breakdown — ${d.total}/100</h4>${bars}</div>
+    <div class="sec"><h4>Risk breakdown — ${d.total}/100</h4>${bars}${drift}</div>
     <div class="sec"><h4>Tools</h4><div class="chips">${toolChips}</div></div>
     ${keys}
     <div class="sec"><h4>🇪🇺 EU AI Act</h4>${eu}</div>
