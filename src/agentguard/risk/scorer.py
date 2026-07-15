@@ -6,11 +6,12 @@ from typing import Any
 
 NO_AUTH_POINTS = 40
 MUTATING_TOOL_POINTS = 25
+SHELL_TOOL_POINTS = 20
 ORPHANED_POINTS = 20
+TOOL_SPRAWL_POINTS = 10
 UNKNOWN_POINTS = 10
-SHELL_TOOL_POINTS = 8
+CREDENTIAL_POINTS = 10
 READ_TOOL_POINTS = 4
-TOOL_SPRAWL_POINTS = 3
 
 TOOL_SPRAWL_THRESHOLD = 5
 MAX_SCORE = 100
@@ -18,7 +19,7 @@ MAX_SCORE = 100
 TIERS = [(75, "critical"), (50, "high"), (25, "medium")]
 
 MUTATING_KEYWORDS = ("write", "delete", "exec", "create", "update", "drop", "remove", "put", "post")
-SHELL_KEYWORDS = ("shell", "cmd", "command", "bash", "terminal", "subprocess", "run")
+SHELL_KEYWORDS = ("shell", "cmd", "command", "bash", "terminal", "subprocess")
 READ_KEYWORDS = ("file", "read", "db", "database", "query", "sql", "fetch", "get", "list", "search")
 
 OWASP_LABELS = {
@@ -38,9 +39,20 @@ def _matches(tools: list[str], keywords: tuple[str, ...]) -> bool:
 
 
 def _requires_auth(asset: dict[str, Any]) -> bool:
+    """Whether the asset demands credentials from callers reaching it."""
     security = asset.get("security") or {}
-    if "requires_auth" in security:
-        return bool(security["requires_auth"])
+    return bool(security.get("requires_auth", False))
+
+
+def _is_exposed(asset: dict[str, Any]) -> bool:
+    """Whether the asset accepts inbound connections, making auth meaningful."""
+    if asset.get("type") == "mcp_server":
+        return True
+    return str(asset.get("url") or "").startswith("http")
+
+
+def _holds_credentials(asset: dict[str, Any]) -> bool:
+    """Whether the asset carries outbound API credentials in its environment."""
     return bool(asset.get("api_keys_detected"))
 
 
@@ -59,7 +71,7 @@ def score_asset(asset: dict[str, Any]) -> dict[str, Any]:
     score = 0
     tags: list[str] = []
 
-    if not _requires_auth(asset):
+    if _is_exposed(asset) and not _requires_auth(asset):
         score += NO_AUTH_POINTS
 
     if _matches(tools, MUTATING_KEYWORDS):
@@ -74,6 +86,10 @@ def score_asset(asset: dict[str, Any]) -> dict[str, Any]:
         score += SHELL_TOOL_POINTS
         tags.append("LLM01")
 
+    if _holds_credentials(asset):
+        score += CREDENTIAL_POINTS
+        tags.append("LLM06")
+
     if _matches(tools, READ_KEYWORDS):
         score += READ_TOOL_POINTS
         tags.append("LLM06")
@@ -87,7 +103,7 @@ def score_asset(asset: dict[str, Any]) -> dict[str, Any]:
     scored = dict(asset)
     scored["risk_score"] = score
     scored["risk_tier"] = _risk_tier(score)
-    scored["owasp_tags"] = tags
+    scored["owasp_tags"] = sorted(set(tags))
     return scored
 
 

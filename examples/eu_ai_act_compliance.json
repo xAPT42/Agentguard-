@@ -4,8 +4,8 @@
   "applicable_from": "2026-08-02",
   "scope_note": "General-purpose AI system obligations. Fields map to DataHub customProperties under the agentguard.eu_ai_act namespace.",
   "known_limitations": [
-    "agentguard.eu_ai_act.disclosure_compliant is currently derived from whether the asset presents authentication. Authentication is not a proxy for an Art. 50 transparency assessment, so this field can read 'true' for an asset whose findings show no AI-generated content disclosure. Treat it as a placeholder pending a real disclosure check.",
-    "agentguard.eu_ai_act.risk_category is derived from the automated risk tier, which weights authentication far more heavily than tool agency. Use it as a triage floor, not a legal classification."
+    "agentguard.eu_ai_act.disclosure_compliant is inferred from an asset's toolset: 'not_applicable' where no tool addresses a human, 'false' where a human-facing channel exists with no declared disclosure. Set disclosure_declared on an asset to record that the obligation is met. AgentGuard cannot verify the content of a disclosure.",
+    "agentguard.eu_ai_act.risk_category is derived from the automated risk tier. Use it as a triage floor, not a legal classification: an Annex III determination depends on deployment context that a scanner cannot observe."
   ],
   "assets": [
     {
@@ -13,7 +13,7 @@
       "urn": "urn:li:mlModel:(urn:li:dataPlatform:mcp,ghost-mcp,PROD)",
       "agentguard.eu_ai_act.owner": "unassigned",
       "agentguard.eu_ai_act.data_access_scope": "filesystem,database,system",
-      "agentguard.eu_ai_act.disclosure_compliant": "false",
+      "agentguard.eu_ai_act.disclosure_compliant": "not_applicable",
       "agentguard.eu_ai_act.risk_category": "high-risk",
       "findings": [
         "No accountable owner registered (Art. 26 human oversight cannot be assigned).",
@@ -27,13 +27,12 @@
       "urn": "urn:li:mlModel:(urn:li:dataPlatform:mcp,langchain-agent,PROD)",
       "agentguard.eu_ai_act.owner": "urn:li:corpuser:ml-platform",
       "agentguard.eu_ai_act.data_access_scope": "filesystem,network,system",
-      "agentguard.eu_ai_act.disclosure_compliant": "true",
-      "agentguard.eu_ai_act.risk_category": "limited-risk",
+      "agentguard.eu_ai_act.disclosure_compliant": "false",
+      "agentguard.eu_ai_act.risk_category": "high-risk",
       "findings": [
         "Agent sends outbound email without a disclosure that content is AI-generated (Art. 50).",
         "Shell execution tool grants agency beyond its documented purpose (Art. 9 risk management).",
-        "Three API credentials detected in the process environment.",
-        "Classified limited-risk because the automated tier derives from the risk score, which under-weights tool agency relative to authentication. The Art. 9 and Art. 50 findings above warrant a manual high-risk classification; automated tiering is a floor, not a substitute for assessment."
+        "Three API credentials detected in the process environment (Art. 15 accuracy and security)."
       ],
       "required_action": "Add AI-generated content disclosure to outbound channels; scope down shell access."
     },
@@ -42,7 +41,7 @@
       "urn": "urn:li:mlModel:(urn:li:dataPlatform:mcp,claude-mcp,PROD)",
       "agentguard.eu_ai_act.owner": "urn:li:corpuser:dev-tooling",
       "agentguard.eu_ai_act.data_access_scope": "filesystem",
-      "agentguard.eu_ai_act.disclosure_compliant": "false",
+      "agentguard.eu_ai_act.disclosure_compliant": "not_applicable",
       "agentguard.eu_ai_act.risk_category": "limited-risk",
       "findings": [
         "Read access to source tree without authentication on a loopback port.",
@@ -55,7 +54,7 @@
       "urn": "urn:li:mlModel:(urn:li:dataPlatform:mcp,datahub-mcp,PROD)",
       "agentguard.eu_ai_act.owner": "urn:li:corpuser:data-governance",
       "agentguard.eu_ai_act.data_access_scope": "application",
-      "agentguard.eu_ai_act.disclosure_compliant": "true",
+      "agentguard.eu_ai_act.disclosure_compliant": "not_applicable",
       "agentguard.eu_ai_act.risk_category": "minimal-risk",
       "findings": [
         "Bearer authentication enforced; owner assigned; read-only metadata scope."
@@ -65,11 +64,12 @@
   ],
   "summary": {
     "total_assets": 4,
-    "high_risk": 1,
-    "limited_risk": 2,
+    "high_risk": 2,
+    "limited_risk": 1,
     "minimal_risk": 1,
     "without_assigned_owner": 1,
-    "disclosure_compliant": 2,
-    "days_to_applicability_at_scan": 383
+    "disclosure_compliant": 0,
+    "days_to_applicability_at_scan": 383,
+    "disclosure_obligation_unmet": 1
   }
 }

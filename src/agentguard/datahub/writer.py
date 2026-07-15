@@ -34,6 +34,20 @@ EU_AI_ACT_RISK_CATEGORY = {
     "low": "minimal-risk",
 }
 
+HUMAN_CHANNEL_KEYWORDS = (
+    "email",
+    "mail",
+    "chat",
+    "message",
+    "notify",
+    "reply",
+    "comment",
+    "sms",
+    "slack",
+    "publish",
+    "respond",
+)
+
 
 def _normalize(name: str) -> str:
     return re.sub(r"[^a-zA-Z0-9_.-]+", "-", str(name)).strip("-").lower() or "unknown"
@@ -60,19 +74,31 @@ def _data_access_scope(asset: dict[str, Any]) -> str:
     return ",".join(scopes) if scopes else "application"
 
 
+def _disclosure_compliant(asset: dict[str, Any]) -> str:
+    """Assess Art. 50 transparency: only assets that address humans carry the obligation."""
+    if "disclosure_declared" in asset:
+        return "true" if asset["disclosure_declared"] else "false"
+
+    tools = [str(tool).lower() for tool in asset.get("tools") or []]
+    addresses_humans = any(word in tool for tool in tools for word in HUMAN_CHANNEL_KEYWORDS)
+    if not addresses_humans:
+        return "not_applicable"
+    return "false"
+
+
 def _custom_properties(asset: dict[str, Any]) -> dict[str, str]:
     tier = str(asset.get("risk_tier", "low"))
     security = asset.get("security") or {}
-    requires_auth = security.get("requires_auth", bool(asset.get("api_keys_detected")))
+    requires_auth = bool(security.get("requires_auth", False))
 
     return {
         "agentguard.risk_score": str(asset.get("risk_score", 0)),
         "agentguard.risk_tier": tier,
         "agentguard.status": str(asset.get("status", "UNKNOWN")),
-        "agentguard.requires_auth": str(bool(requires_auth)).lower(),
+        "agentguard.requires_auth": str(requires_auth).lower(),
         "agentguard.eu_ai_act.owner": str(asset.get("owner", DEFAULT_OWNER)),
         "agentguard.eu_ai_act.data_access_scope": _data_access_scope(asset),
-        "agentguard.eu_ai_act.disclosure_compliant": str(bool(requires_auth)).lower(),
+        "agentguard.eu_ai_act.disclosure_compliant": _disclosure_compliant(asset),
         "agentguard.eu_ai_act.risk_category": EU_AI_ACT_RISK_CATEGORY.get(tier, "minimal-risk"),
         "agentguard.owasp_tags": ",".join(asset.get("owasp_tags") or []),
         "agentguard.last_seen": datetime.now(timezone.utc).isoformat(),

@@ -10,11 +10,11 @@ Scanning for MCP servers and AI agents...
 NAME            | TYPE       | STATUS   | RISK | TIER
 ----------------+------------+----------+------+---------
 Ghost MCP       | mcp_server | ORPHANED | 100  | critical
+LangChain Agent | agent      | ACTIVE   | 69   | high
 Claude MCP      | mcp_server | ACTIVE   | 44   | medium
-LangChain Agent | agent      | ACTIVE   | 40   | medium
 DataHub MCP     | mcp_server | ACTIVE   | 4    | low
 
-4 asset(s) discovered — critical: 1, low: 1, medium: 2
+4 asset(s) discovered — critical: 1, high: 1, low: 1, medium: 1
 Report written to scan_output.json
 DataHub: 4 written, 0 failed
 
@@ -113,13 +113,19 @@ Each asset scores 0–100 by additive signal:
 
 | Signal | Points | Rationale |
 |---|---|---|
-| No authentication | +40 | Anything on the network can drive the agent |
+| Exposed with no authentication | +40 | Anything on the network can drive the agent |
 | Write / delete / exec tools | +25 | Actions are irreversible |
+| Shell / command tools | +20 | **LLM01** Prompt Injection |
 | ORPHANED | +20 | Endpoint is claimable |
-| UNKNOWN | +10 | Unattributed credentials |
-| Shell / command tools | +8 | **LLM01** Prompt Injection |
+| More than 5 tools | +10 | **LLM08** Excessive Agency |
+| UNKNOWN | +10 | Unattributed workload |
+| API credentials in environment | +10 | **LLM06** Sensitive Information Disclosure |
 | File / database read tools | +4 | **LLM06** Sensitive Information Disclosure |
-| More than 5 tools | +3 | **LLM08** Excessive Agency |
+
+Two distinctions matter:
+
+- **Exposure is not credential-holding.** The +40 no-auth penalty applies only to assets that *accept* inbound connections — an MCP server on a port. An agent process that merely *holds* an `OPENAI_API_KEY` is not an unauthenticated listener; its credentials are an outbound secret-exposure risk (+10), not a mitigation.
+- **Agency is weighted near authentication.** A shell tool is +20, so a credentialed agent with `run_shell` and `send_email` reaches **high** on tool capability alone, without needing an open port.
 
 | Tier | Score |
 |---|---|
@@ -138,12 +144,14 @@ The Act applies from **2 August 2026**. AgentGuard writes the fields its obligat
 |---|---|
 | `agentguard.eu_ai_act.owner` | Art. 26 — accountable human oversight |
 | `agentguard.eu_ai_act.data_access_scope` | Art. 9 — risk management, documented scope |
-| `agentguard.eu_ai_act.disclosure_compliant` | Art. 50 — transparency obligations |
+| `agentguard.eu_ai_act.disclosure_compliant` | Art. 50 — transparency obligations (`true` / `false` / `not_applicable`) |
 | `agentguard.eu_ai_act.risk_category` | Annex III — high / limited / minimal risk |
 | `agentguard.owasp_tags` | OWASP LLM Top 10 findings |
 | `agentguard.last_seen` | Art. 12 — record keeping |
 
 Risk tiers map to the Act's categories: `critical`/`high` → **high-risk**, `medium` → **limited-risk**, `low` → **minimal-risk**.
+
+Art. 50 binds systems that interact with people, so `disclosure_compliant` reports `not_applicable` for assets with no human-facing channel, and `false` for an asset that can email or message people without a declared disclosure. Set `disclosure_declared` on an asset to record that the obligation is met. Automated classification is a triage floor, not a legal assessment.
 
 See [`examples/eu_ai_act_compliance.json`](examples/eu_ai_act_compliance.json) for a full report.
 

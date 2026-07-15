@@ -4,7 +4,8 @@
     "total": 4,
     "by_risk_tier": {
       "critical": 1,
-      "medium": 2,
+      "high": 1,
+      "medium": 1,
       "low": 1
     },
     "by_status": {
@@ -42,27 +43,6 @@
       ]
     },
     {
-      "type": "mcp_server",
-      "name": "Claude MCP",
-      "url": "http://127.0.0.1:3000",
-      "tools": [
-        "read_file",
-        "list_directory",
-        "search_codebase"
-      ],
-      "status": "ACTIVE",
-      "discovered_via": "port_scan",
-      "security": {
-        "requires_auth": false,
-        "auth_type": null
-      },
-      "risk_score": 44,
-      "risk_tier": "medium",
-      "owasp_tags": [
-        "LLM06"
-      ]
-    },
-    {
       "type": "agent",
       "name": "LangChain Agent",
       "source": "process",
@@ -83,12 +63,33 @@
         "send_email"
       ],
       "status": "ACTIVE",
-      "risk_score": 40,
-      "risk_tier": "medium",
+      "risk_score": 69,
+      "risk_tier": "high",
       "owasp_tags": [
         "LLM01",
         "LLM06",
         "LLM08"
+      ]
+    },
+    {
+      "type": "mcp_server",
+      "name": "Claude MCP",
+      "url": "http://127.0.0.1:3000",
+      "tools": [
+        "read_file",
+        "list_directory",
+        "search_codebase"
+      ],
+      "status": "ACTIVE",
+      "discovered_via": "port_scan",
+      "security": {
+        "requires_auth": false,
+        "auth_type": null
+      },
+      "risk_score": 44,
+      "risk_tier": "medium",
+      "owasp_tags": [
+        "LLM06"
       ]
     },
     {

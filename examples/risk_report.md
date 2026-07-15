@@ -7,8 +7,8 @@
 | Asset | Type | Status | Risk | Tier | OWASP |
 |---|---|---|---|---|---|
 | Ghost MCP | mcp_server | ORPHANED | 100 | critical | LLM01, LLM06, LLM08 |
+| LangChain Agent | agent | ACTIVE | 69 | high | LLM01, LLM06, LLM08 |
 | Claude MCP | mcp_server | ACTIVE | 44 | medium | LLM06 |
-| LangChain Agent | agent | ACTIVE | 40 | medium | LLM01, LLM06, LLM08 |
 | DataHub MCP | mcp_server | ACTIVE | 4 | low | LLM06 |
 
 **1 critical asset.** This scan exits with code 1, failing the pipeline.
@@ -28,6 +28,21 @@ Orphaned servers are the highest-value finding in a fleet scan. The config entry
 2. If still required, redeploy with bearer auth and drop `exec_shell` and `list_secrets` from the toolset.
 3. Confirm no other host can claim `10.4.12.87:9000`.
 
+## High: LangChain Agent (69)
+
+Process `48211` running `langchain_app.server` with `OPENAI_API_KEY`, `LANGCHAIN_API_KEY`, and `LANGCHAIN_TRACING_V2` in its environment. It holds `run_shell` and `send_email` in the same toolset.
+
+Shell execution combined with an outbound channel is the classic injection-to-exfiltration path: untrusted content reaching the model can drive a command whose output leaves over email. This agent scores high on capability alone — it exposes no port, so the no-authentication penalty never applies. Nothing about it is misconfigured in the conventional sense; the risk is the toolset it was granted.
+
+- **LLM01 (Prompt Injection):** `run_shell` reachable from `http_fetch` content (+20).
+- **LLM06 (Sensitive Information Disclosure):** three API credentials in the process environment (+10), plus `read_file` and `search_index` over the local tree (+4).
+- **LLM08 (Excessive Agency):** 6 tools spanning read, write, execute, and send (+10).
+
+**Remediation**
+1. Split `run_shell` into a separate, allowlisted agent; remove it from the email-capable one.
+2. Move credentials from the process environment to a secret manager with short-lived tokens.
+3. Add an AI-generated content disclosure to outbound email (EU AI Act Art. 50).
+
 ## Medium: Claude MCP (44)
 
 Found by port scan on `127.0.0.1:3000` — not declared in any config file, which means it was never reviewed. Unauthenticated read access to the source tree.
@@ -38,23 +53,6 @@ Found by port scan on `127.0.0.1:3000` — not declared in any config file, whic
 1. Enable authentication even on loopback; container networking routinely makes loopback reachable.
 2. Declare the server in `.mcp.json` so it enters the review path.
 
-## Medium: LangChain Agent (40)
-
-Process `48211` running `langchain_app.server` with `OPENAI_API_KEY`, `LANGCHAIN_API_KEY`, and `LANGCHAIN_TRACING_V2` in its environment. It holds `run_shell` and `send_email` in the same toolset.
-
-Shell execution combined with an outbound channel is the classic injection-to-exfiltration path: untrusted content reaching the model can drive a command whose output leaves over email.
-
-- **LLM01 (Prompt Injection):** `run_shell` plus `http_fetch` on untrusted input.
-- **LLM06 (Sensitive Information Disclosure):** `read_file` and `search_index` over the local tree.
-- **LLM08 (Excessive Agency):** 6 tools spanning read, write, execute, and send.
-
-**Read the score with care.** At 40 this agent ranks below the read-only Claude MCP, despite holding the more dangerous capability. The scorer applies its +40 no-authentication penalty only to assets that expose an unauthenticated surface; this agent presents credentials, so that penalty never lands and its shell access is worth just +8. Tool-level agency is under-weighted relative to authentication. Treat the OWASP tags, not the score, as the signal here.
-
-**Remediation**
-1. Split `run_shell` into a separate, allowlisted agent; remove it from the email-capable one.
-2. Move credentials from the process environment to a secret manager with short-lived tokens.
-3. Add an AI-generated content disclosure to outbound email (EU AI Act Art. 50).
-
 ## Low: DataHub MCP (4)
 
 Bearer auth enforced, owner assigned, read-only metadata tools. This is the intended baseline. It scores 4 rather than 0 because `get_dataset` is a read tool (**LLM06**) — a floor that read access always carries.
@@ -64,8 +62,8 @@ Bearer auth enforced, owner assigned, read-only metadata tools. This is the inte
 | # | Action | Asset | Reduces |
 |---|---|---|---|
 | 1 | Remove or re-authenticate the orphaned endpoint | Ghost MCP | 100 → 0 |
-| 2 | Separate shell execution from the email tool | LangChain Agent | 40 → 29 |
-| 3 | Move API keys out of process env | LangChain Agent | — |
+| 2 | Separate shell execution from the email tool | LangChain Agent | 69 → 39 |
+| 3 | Move API keys out of process env | LangChain Agent | 39 → 29 |
 | 4 | Enable auth on port 3000 | Claude MCP | 44 → 4 |
 
 **Fleet risk after remediation:** 1 critical → 0.
