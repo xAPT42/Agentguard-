@@ -1,59 +1,23 @@
 {
   "version": "0.1.0",
   "summary": {
-    "total": 9,
+    "total": 10,
     "by_risk_tier": {
-      "critical": 1,
-      "high": 2,
-      "medium": 4,
-      "low": 2
+      "critical": 2,
+      "high": 1,
+      "medium": 3,
+      "low": 4
     },
     "by_status": {
-      "ORPHANED": 2,
-      "ACTIVE": 7
+      "ACTIVE": 10
     },
-    "critical_count": 1
+    "critical_count": 2
   },
   "assets": [
     {
       "type": "mcp_server",
-      "name": "Ghost MCP",
-      "url": "http://10.4.12.87:9000",
-      "tools": [
-        "read_file",
-        "write_file",
-        "delete_file",
-        "exec_shell",
-        "query_db",
-        "list_secrets"
-      ],
-      "status": "ORPHANED",
-      "discovered_via": "config",
-      "config_path": "/home/dev/.claude/settings.json",
-      "security": {
-        "requires_auth": false,
-        "auth_type": null
-      },
-      "risk_score": 100,
-      "risk_tier": "critical",
-      "owasp_tags": [
-        "LLM01",
-        "LLM06",
-        "LLM08"
-      ]
-    },
-    {
-      "type": "agent",
       "name": "LangChain Agent",
-      "source": "process",
-      "pid": 48211,
-      "container_id": null,
-      "command": "python -m langchain_app.server --mcp claude-mcp --tools shell,http",
-      "api_keys_detected": [
-        "OPENAI_API_KEY",
-        "LANGCHAIN_TRACING_V2",
-        "LANGCHAIN_API_KEY"
-      ],
+      "url": "http://127.0.0.1:3100",
       "tools": [
         "run_shell",
         "http_fetch",
@@ -63,8 +27,14 @@
         "send_email"
       ],
       "status": "ACTIVE",
-      "risk_score": 69,
-      "risk_tier": "high",
+      "discovered_via": "config",
+      "security": {
+        "requires_auth": false,
+        "auth_type": null
+      },
+      "risk_score": 99,
+      "config_path": "/root/projects/agentguard/.mcp.json",
+      "risk_tier": "critical",
       "owasp_tags": [
         "LLM01",
         "LLM06",
@@ -72,156 +42,188 @@
       ]
     },
     {
-      "type": "agent",
-      "name": "OpenAI GPT Agent",
-      "status": "ACTIVE",
-      "source": "process",
+      "type": "mcp_server",
+      "name": "Ghost MCP",
+      "url": "http://127.0.0.1:3101",
       "tools": [
-        "chat_completion",
-        "embeddings",
-        "file_search"
+        "exec_shell",
+        "send_email",
+        "spawn_agent",
+        "list_secrets",
+        "delete_file"
       ],
+      "status": "ACTIVE",
+      "discovered_via": "config",
       "security": {
-        "requires_auth": true,
-        "auth_type": "api_key"
+        "requires_auth": false,
+        "auth_type": null
       },
-      "risk_score": 55,
+      "risk_score": 89,
+      "config_path": "/root/projects/agentguard/.mcp.json",
+      "risk_tier": "critical",
+      "owasp_tags": [
+        "LLM01",
+        "LLM06"
+      ]
+    },
+    {
+      "type": "mcp_server",
+      "name": "Chroma VectorDB",
+      "url": "http://127.0.0.1:3107",
+      "tools": [
+        "query_collection",
+        "insert",
+        "delete"
+      ],
+      "status": "ACTIVE",
+      "discovered_via": "config",
+      "security": {
+        "requires_auth": false,
+        "auth_type": null
+      },
+      "risk_score": 69,
+      "config_path": "/root/projects/agentguard/.mcp.json",
       "risk_tier": "high",
       "owasp_tags": [
         "LLM06"
-      ],
-      "eu_ai_act": {
-        "disclosure_compliant": "false"
-      }
+      ]
     },
     {
       "type": "mcp_server",
       "name": "Claude MCP",
-      "url": "http://127.0.0.1:3000",
+      "url": "http://127.0.0.1:3103",
       "tools": [
         "read_file",
         "list_directory",
         "search_codebase"
       ],
       "status": "ACTIVE",
-      "discovered_via": "port_scan",
+      "discovered_via": "config",
       "security": {
         "requires_auth": false,
         "auth_type": null
       },
       "risk_score": 44,
+      "config_path": "/root/projects/agentguard/.mcp.json",
       "risk_tier": "medium",
       "owasp_tags": [
         "LLM06"
       ]
     },
     {
-      "type": "agent",
-      "name": "Mistral Local Agent",
-      "status": "ACTIVE",
-      "source": "process",
-      "tools": [
-        "chat",
-        "function_call"
-      ],
-      "security": {
-        "requires_auth": false,
-        "auth_type": null
-      },
-      "risk_score": 42,
-      "risk_tier": "medium",
-      "owasp_tags": [
-        "LLM01"
-      ],
-      "eu_ai_act": {
-        "disclosure_compliant": "not_applicable"
-      }
-    },
-    {
-      "type": "agent",
-      "name": "HuggingFace Inference",
-      "status": "ACTIVE",
-      "source": "process",
-      "tools": [
-        "text_generation",
-        "classification"
-      ],
-      "security": {
-        "requires_auth": true,
-        "auth_type": "api_key"
-      },
-      "risk_score": 30,
-      "risk_tier": "medium",
-      "owasp_tags": [],
-      "eu_ai_act": {
-        "disclosure_compliant": "not_applicable"
-      }
-    },
-    {
-      "type": "vector_store",
+      "type": "mcp_server",
       "name": "Qdrant Search",
-      "status": "ORPHANED",
-      "discovered_via": "config",
-      "url": "http://10.4.12.90:6333",
+      "url": "http://127.0.0.1:3106",
       "tools": [
         "search",
         "upsert"
       ],
+      "status": "ACTIVE",
+      "discovered_via": "config",
       "security": {
         "requires_auth": false,
         "auth_type": null
       },
-      "risk_score": 25,
+      "risk_score": 44,
+      "config_path": "/root/projects/agentguard/.mcp.json",
       "risk_tier": "medium",
-      "owasp_tags": [],
-      "eu_ai_act": {
-        "disclosure_compliant": "not_applicable"
-      }
+      "owasp_tags": [
+        "LLM06"
+      ]
     },
     {
-      "type": "vector_store",
-      "name": "Chroma VectorDB",
-      "status": "ACTIVE",
-      "discovered_via": "port_scan",
-      "url": "http://127.0.0.1:8000",
+      "type": "mcp_server",
+      "name": "Mistral Local Agent",
+      "url": "http://127.0.0.1:3104",
       "tools": [
-        "query_collection",
-        "insert",
-        "delete"
+        "chat",
+        "function_call"
       ],
+      "status": "ACTIVE",
+      "discovered_via": "config",
       "security": {
         "requires_auth": false,
         "auth_type": null
       },
-      "risk_score": 18,
+      "risk_score": 40,
+      "config_path": "/root/projects/agentguard/.mcp.json",
+      "risk_tier": "medium",
+      "owasp_tags": []
+    },
+    {
+      "type": "mcp_server",
+      "name": "OpenAI GPT Agent",
+      "url": "http://127.0.0.1:3102",
+      "tools": [
+        "chat_completion",
+        "embeddings",
+        "file_search"
+      ],
+      "status": "ACTIVE",
+      "discovered_via": "config",
+      "security": {
+        "requires_auth": true,
+        "auth_type": "api_key"
+      },
+      "risk_score": 4,
+      "config_path": "/root/projects/agentguard/.mcp.json",
       "risk_tier": "low",
       "owasp_tags": [
         "LLM06"
-      ],
-      "eu_ai_act": {
-        "disclosure_compliant": "not_applicable"
-      }
+      ]
     },
     {
       "type": "mcp_server",
       "name": "DataHub MCP",
-      "url": "http://datahub-gms.internal:8080",
+      "url": "http://127.0.0.1:3108",
       "tools": [
         "get_dataset",
         "get_lineage"
       ],
       "status": "ACTIVE",
       "discovered_via": "config",
-      "config_path": "/home/dev/projects/platform/.mcp.json",
       "security": {
         "requires_auth": true,
         "auth_type": "bearer"
       },
       "risk_score": 4,
+      "config_path": "/root/projects/agentguard/.mcp.json",
       "risk_tier": "low",
       "owasp_tags": [
         "LLM06"
       ]
+    },
+    {
+      "type": "mcp_server",
+      "name": "HuggingFace Inference",
+      "url": "http://127.0.0.1:3105",
+      "tools": [
+        "text_generation",
+        "classification"
+      ],
+      "status": "ACTIVE",
+      "discovered_via": "config",
+      "security": {
+        "requires_auth": true,
+        "auth_type": "api_key"
+      },
+      "risk_score": 0,
+      "config_path": "/root/projects/agentguard/.mcp.json",
+      "risk_tier": "low",
+      "owasp_tags": []
+    },
+    {
+      "type": "agent",
+      "name": "claude",
+      "source": "process",
+      "pid": 729550,
+      "container_id": null,
+      "api_keys_detected": [],
+      "status": "ACTIVE",
+      "risk_score": 0,
+      "command": "claude --resume",
+      "risk_tier": "low",
+      "owasp_tags": []
     }
   ]
 }
