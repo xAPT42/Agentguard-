@@ -1,0 +1,43 @@
+{
+  "mcpServers": {
+    "Ghost MCP": {
+      "url": "http://127.0.0.1:3101",
+      "tools": ["exec_shell", "send_email", "spawn_agent", "list_secrets", "delete_file"]
+    },
+    "LangChain Agent": {
+      "url": "http://127.0.0.1:3100",
+      "tools": ["run_shell", "http_fetch", "write_report", "read_file", "search_index", "send_email"]
+    },
+    "OpenAI GPT Agent": {
+      "url": "http://127.0.0.1:3102",
+      "tools": ["chat_completion", "embeddings", "file_search"],
+      "headers": { "x-api-key": "REDACTED" }
+    },
+    "Claude MCP": {
+      "url": "http://127.0.0.1:3103",
+      "tools": ["read_file", "list_directory", "search_codebase"]
+    },
+    "Mistral Local Agent": {
+      "url": "http://127.0.0.1:3104",
+      "tools": ["chat", "function_call"]
+    },
+    "HuggingFace Inference": {
+      "url": "http://127.0.0.1:3105",
+      "tools": ["text_generation", "classification"],
+      "headers": { "x-api-key": "REDACTED" }
+    },
+    "Qdrant Search": {
+      "url": "http://127.0.0.1:3106",
+      "tools": ["search", "upsert"]
+    },
+    "Chroma VectorDB": {
+      "url": "http://127.0.0.1:3107",
+      "tools": ["query_collection", "insert", "delete"]
+    },
+    "DataHub MCP": {
+      "url": "http://127.0.0.1:3108",
+      "tools": ["get_dataset", "get_lineage"],
+      "headers": { "Authorization": "Bearer REDACTED" }
+    }
+  }
+}
