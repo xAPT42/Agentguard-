@@ -216,12 +216,12 @@
       "type": "agent",
       "name": "claude",
       "source": "process",
-      "pid": 729550,
+      "pid": 1576209,
       "container_id": null,
       "api_keys_detected": [],
       "status": "ACTIVE",
       "risk_score": 0,
-      "command": "claude --resume",
+      "command": "claude",
       "risk_tier": "low",
       "owasp_tags": []
     }

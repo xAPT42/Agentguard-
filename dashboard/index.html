@@ -285,6 +285,31 @@
     .kpi-row { grid-template-columns: repeat(2, 1fr); }
     .cols { grid-template-columns: 1fr; }
   }
+
+  /* ---------- DEFCON Alert Bar ---------- */
+  #defcon-bar {
+    padding: 10px 32px; font-size: 12px; font-weight: 700;
+    text-align: center; letter-spacing: 0.8px; text-transform: uppercase;
+    display: none; transition: background 0.4s;
+  }
+  .defcon-1 { background: #DC2626; color: #fff; animation: defcon-pulse 1.2s ease-in-out infinite; }
+  .defcon-2 { background: #EA580C; color: #fff; }
+  .defcon-ok { background: #16A34A; color: #fff; }
+  @keyframes defcon-pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+  /* ---------- Blast Radius ---------- */
+  .blast-graph { padding: 16px 24px 20px; }
+  .blast-row { display:flex; align-items:center; gap:14px; margin-bottom:10px; }
+  .blast-node {
+    padding:5px 12px; border-radius:6px; font-size:12px; font-weight:600;
+    white-space:nowrap; max-width:190px; overflow:hidden; text-overflow:ellipsis; flex-shrink:0;
+  }
+  .blast-arrow { color:#CBD5E1; font-size:18px; flex-shrink:0; }
+  .blast-datasets { display:flex; gap:6px; flex-wrap:wrap; }
+  .blast-ds {
+    padding:3px 9px; border-radius:4px; font-size:11px; font-weight:500;
+    background:#F1F5F9; border:1px solid #E2E8F0; color:#475569;
+  }
 </style>
 </head>
 <body>
@@ -378,6 +403,15 @@
           </div>
         </div>
       </section>
+
+      <!-- Blast Radius -->
+      <div class="card" id="blast-card" style="margin-top:20px">
+        <div class="card-head">
+          <div class="card-title">Blast Radius — Agent to Data Lineage</div>
+          <div class="card-sub">Which agents can reach which data sources based on declared tools</div>
+        </div>
+        <div class="blast-graph" id="blast-graph"></div>
+      </div>
 
       <!-- ============ RISK ============ -->
       <section class="view" id="view-risk">
@@ -1270,6 +1304,56 @@ async function testConnection() {
 /* ============================================================
    Boot
    ============================================================ */
+function renderDefcon(assets) {
+  const bar = document.getElementById("defcon-bar");
+  if (!assets || !assets.length) { bar.style.display = "none"; return; }
+  const critical = assets.filter(a => a.risk_tier === "critical").length;
+  const high = assets.filter(a => a.risk_tier === "high").length;
+  bar.style.display = "block";
+  if (critical > 0) {
+    bar.className = "defcon-1";
+    bar.textContent = "⚠ DEFCON 1 — " + critical + " CRITICAL AGENT" + (critical > 1 ? "S" : "") + " DETECTED";
+  } else if (high > 0) {
+    bar.className = "defcon-2";
+    bar.textContent = "▲ DEFCON 2 — " + high + " HIGH RISK AGENT" + (high > 1 ? "S" : "") + " ACTIVE";
+  } else {
+    bar.className = "defcon-ok";
+    bar.textContent = "✓ FLEET SECURE — No critical threats detected";
+  }
+}
+
+function renderBlastRadius(assets) {
+  const KW = {
+    "query_db":"SQL Database", "sql":"SQL Database", "database":"Database",
+    "search":"Search Index", "upsert":"Vector Store", "vector":"Vector Store",
+    "read_file":"Filesystem", "list_directory":"Filesystem", "list_files":"Filesystem",
+    "get_dataset":"DataHub", "get_lineage":"DataHub", "search_assets":"DataHub",
+    "export":"Data Export", "report":"Reports",
+    "send_email":"Email", "post_message":"Messaging",
+    "spawn_agent":"Agent Network", "exec_shell":"OS Shell",
+    "list_secrets":"Secrets Store", "delete_file":"Filesystem"
+  };
+  const COLORS = {
+    critical:{bg:"#FEF2F2",border:"#DC2626",text:"#DC2626"},
+    high:{bg:"#FFF7ED",border:"#EA580C",text:"#EA580C"},
+    medium:{bg:"#FFFBEB",border:"#D97706",text:"#D97706"},
+    low:{bg:"#F0FDF4",border:"#16A34A",text:"#16A34A"}
+  };
+  const el = document.getElementById("blast-graph");
+  if (!el) return;
+  const rows = [];
+  assets.forEach(a => {
+    const toolsList = (a.tools || []).map(t => String(t).toLowerCase());
+    const ds = new Set();
+    toolsList.forEach(tool => { Object.entries(KW).forEach(([kw,label]) => { if (tool.includes(kw)) ds.add(label); }); });
+    if (!ds.size) return;
+    const c = COLORS[a.risk_tier] || COLORS.low;
+    const dsHtml = [...ds].map(d => "<span class='blast-ds'>" + d + "</span>").join("");
+    rows.push("<div class='blast-row'><div class='blast-node' style='background:" + c.bg + ";border:1px solid " + c.border + ";color:" + c.text + "' title='" + esc(a.name) + "'>" + esc(a.name) + "</div><span class='blast-arrow'>→</span><div class='blast-datasets'>" + dsHtml + "</div></div>");
+  });
+  el.innerHTML = rows.length ? rows.join("") : "<p style='color:#94A3B8;font-size:13px'>No data source connections detected from tool analysis.</p>";
+}
+
 function render(data, note) {
   DATA = data;
   const assets = sorted();
@@ -1281,6 +1365,8 @@ function render(data, note) {
   renderHeat(assets);
   renderEU(assets);
   renderBadges(assets);
+  renderDefcon(assets);
+  renderBlastRadius(assets);
   if (VIEW === "risk") renderDimChart();
   document.getElementById("last-scan").textContent = new Date().toLocaleString();
   const banner = document.getElementById("banner");
