@@ -1427,30 +1427,31 @@ window.addEventListener("load", () => {
   }
 });
 function exportReport() {
-  if (!DATA || !DATA.length) { alert("No scan data to export. Run a scan first."); return; }
+  const assets = (DATA && DATA.assets) ? DATA.assets : [];
+  if (!assets.length) { alert("No scan data to export. Run a scan first."); return; }
   const now = new Date();
   const dateStr = now.toISOString().slice(0,10);
   const dateHuman = now.toLocaleDateString("en-GB", { day:"numeric", month:"long", year:"numeric" });
   const timeHuman = now.toLocaleTimeString("en-GB");
 
-  const critical = DATA.filter(a => a.risk_tier === "critical");
-  const high     = DATA.filter(a => a.risk_tier === "high");
-  const medium   = DATA.filter(a => a.risk_tier === "medium");
-  const low      = DATA.filter(a => a.risk_tier === "low");
-  const avgRisk  = Math.round(DATA.reduce((s,a) => s + (a.risk_score||0), 0) / DATA.length);
+  const critical = assets.filter(a => a.risk_tier === "critical");
+  const high     = assets.filter(a => a.risk_tier === "high");
+  const medium   = assets.filter(a => a.risk_tier === "medium");
+  const low      = assets.filter(a => a.risk_tier === "low");
+  const avgRisk  = Math.round(assets.reduce((s,a) => s + (a.risk_score||0), 0) / assets.length);
   const fleetHealth = 100 - avgRisk;
 
-  const euUnmet  = DATA.filter(a => {
+  const euUnmet  = assets.filter(a => {
     const eu = a.eu_ai_act || {};
     return eu.art9 === false || eu.art13 === false || eu.art50 === false;
   });
-  const euReady  = DATA.filter(a => {
+  const euReady  = assets.filter(a => {
     const eu = a.eu_ai_act || {};
     return eu.art9 !== false && eu.art13 !== false && eu.art50 !== false;
   });
 
   const owaspMap = {};
-  DATA.forEach(a => {
+  assets.forEach(a => {
     (a.owasp_flags || []).forEach(flag => {
       owaspMap[flag] = (owaspMap[flag] || []);
       owaspMap[flag].push(a.name);
@@ -1495,7 +1496,7 @@ function exportReport() {
     return `<span style="color:#94A3B8">—</span>`;
   }
 
-  const inventoryRows = DATA.map(a => `
+  const inventoryRows = assets.map(a => `
     <tr style="border-bottom:1px solid #E2E8F0">
       <td style="padding:10px 12px;font-weight:600">${a.name}</td>
       <td style="padding:10px 12px;color:#64748B;font-size:12px">${a.type||"—"}</td>
@@ -1505,7 +1506,7 @@ function exportReport() {
       <td style="padding:10px 12px;color:#64748B;font-size:12px">${(a.eu_ai_act||{}).owner||"unassigned"}</td>
     </tr>`).join("");
 
-  const euRows = DATA.map(a => {
+  const euRows = assets.map(a => {
     const eu = a.eu_ai_act || {};
     const noHuman = !eu.art50 && eu.art50 !== false;
     return `
@@ -1529,7 +1530,7 @@ function exportReport() {
       <td style="padding:10px 12px;font-weight:700;color:#DC2626">${agents.length}</td>
     </tr>`).join("");
 
-  const remedRows = DATA.filter(a => a.risk_tier !== "low").map(a => `
+  const remedRows = assets.filter(a => a.risk_tier !== "low").map(a => `
     <tr style="border-bottom:1px solid #E2E8F0">
       <td style="padding:10px 12px;font-weight:600">${a.name}</td>
       <td style="padding:10px 12px">${badge(a.risk_tier)}</td>
@@ -1579,7 +1580,7 @@ function exportReport() {
     </div>
     <h1>AI Agent Fleet<br>Compliance Report</h1>
     <p class="cover-meta">EU AI Act Readiness Assessment — Applicable 2 August 2026</p>
-    <p class="cover-meta" style="margin-top:8px">Generated: ${dateHuman} at ${timeHuman} &nbsp;|&nbsp; Scan covers ${DATA.length} assets &nbsp;|&nbsp; Powered by AgentGuard</p>
+    <p class="cover-meta" style="margin-top:8px">Generated: ${dateHuman} at ${timeHuman} &nbsp;|&nbsp; Scan covers ${assets.length} assets &nbsp;|&nbsp; Powered by AgentGuard</p>
   </div>
 
   <!-- Executive Summary -->
