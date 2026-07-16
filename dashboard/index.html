@@ -1328,35 +1328,107 @@ function renderDefcon(assets) {
 }
 
 function renderBlastRadius(assets) {
-  const KW = {
-    "query_db":"SQL Database", "sql":"SQL Database", "database":"Database",
-    "search":"Search Index", "upsert":"Vector Store", "vector":"Vector Store",
-    "read_file":"Filesystem", "list_directory":"Filesystem", "list_files":"Filesystem",
-    "get_dataset":"DataHub", "get_lineage":"DataHub", "search_assets":"DataHub",
-    "export":"Data Export", "report":"Reports",
-    "send_email":"Email", "post_message":"Messaging",
-    "spawn_agent":"Agent Network", "exec_shell":"OS Shell",
-    "list_secrets":"Secrets Store", "delete_file":"Filesystem"
-  };
-  const COLORS = {
-    critical:{bg:"#FEF2F2",border:"#DC2626",text:"#DC2626"},
-    high:{bg:"#FFF7ED",border:"#EA580C",text:"#EA580C"},
-    medium:{bg:"#FFFBEB",border:"#D97706",text:"#D97706"},
-    low:{bg:"#F0FDF4",border:"#16A34A",text:"#16A34A"}
-  };
   const el = document.getElementById("blast-graph");
   if (!el) return;
-  const rows = [];
+
+  const KW = {
+    "query_db":"SQL Database","sql":"SQL Database","database":"Database",
+    "search":"Search Index","upsert":"Vector Store","vector":"Vector Store",
+    "read_file":"Filesystem","list_directory":"Filesystem","list_files":"Filesystem","delete_file":"Filesystem",
+    "get_dataset":"DataHub","get_lineage":"DataHub","search_assets":"DataHub",
+    "export":"Data Export","report":"Reports",
+    "send_email":"Email","post_message":"Messaging",
+    "spawn_agent":"Agent Network","exec_shell":"OS Shell",
+    "list_secrets":"Secrets Store"
+  };
+  const TC = { critical:"#DC2626", high:"#EA580C", medium:"#D97706", low:"#16A34A" };
+  const TB = { critical:"#FEF2F2", high:"#FFF7ED", medium:"#FFFBEB", low:"#F0FDF4" };
+
+  // Build connections
+  const conns = [];
+  const dsAll = new Set();
   assets.forEach(a => {
-    const toolsList = (a.tools || []).map(t => String(t).toLowerCase());
+    const tools = (a.tools || []).map(t => String(t).toLowerCase());
     const ds = new Set();
-    toolsList.forEach(tool => { Object.entries(KW).forEach(([kw,label]) => { if (tool.includes(kw)) ds.add(label); }); });
-    if (!ds.size) return;
-    const c = COLORS[a.risk_tier] || COLORS.low;
-    const dsHtml = [...ds].map(d => "<span class='blast-ds'>" + d + "</span>").join("");
-    rows.push("<div class='blast-row'><div class='blast-node' style='background:" + c.bg + ";border:1px solid " + c.border + ";color:" + c.text + "' title='" + esc(a.name) + "'>" + esc(a.name) + "</div><span class='blast-arrow'>→</span><div class='blast-datasets'>" + dsHtml + "</div></div>");
+    tools.forEach(t => Object.entries(KW).forEach(([kw,lbl]) => { if (t.includes(kw)) ds.add(lbl); }));
+    if (ds.size) { conns.push({ a, ds:[...ds] }); ds.forEach(d => dsAll.add(d)); }
   });
-  el.innerHTML = rows.length ? rows.join("") : "<p style='color:#94A3B8;font-size:13px'>No data source connections detected from tool analysis.</p>";
+
+  if (!conns.length) {
+    el.innerHTML = "<p style='color:#94A3B8;font-size:13px;padding:16px'>No data source connections detected.</p>";
+    return;
+  }
+
+  const dsList = [...dsAll];
+  const W = Math.max(el.offsetWidth || 0, 640);
+  const NODE_H = 34, GAP = 10, PAD = 20;
+  const AGENT_W = 172, DS_W = 140;
+  const AGENT_X = PAD, DS_X = W - DS_W - PAD;
+
+  // Y centres for each column (vertically centred)
+  function colCentres(count) {
+    const total = count * NODE_H + (count - 1) * GAP;
+    const top = PAD + 24; // leave room for column label
+    return Array.from({length: count}, (_, i) => top + i * (NODE_H + GAP) + NODE_H / 2);
+  }
+
+  const agentY = colCentres(conns.length);
+  const dsY    = colCentres(dsList.length);
+  const H = Math.max(
+    PAD + 24 + conns.length  * (NODE_H + GAP),
+    PAD + 24 + dsList.length * (NODE_H + GAP)
+  ) + PAD;
+
+  // --- SVG ---
+  let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="display:block;overflow:visible">`;
+
+  // column labels
+  s += `<text x="${AGENT_X + AGENT_W/2}" y="16" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" font-weight="700" fill="#94A3B8" letter-spacing="0.8">AI AGENTS</text>`;
+  s += `<text x="${DS_X + DS_W/2}" y="16" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" font-weight="700" fill="#94A3B8" letter-spacing="0.8">DATA SOURCES</text>`;
+
+  // edges (drawn first, behind nodes)
+  conns.forEach((c, ai) => {
+    const ay = agentY[ai];
+    const ax = AGENT_X + AGENT_W;
+    const col = TC[c.a.risk_tier] || "#94A3B8";
+    c.ds.forEach(d => {
+      const di = dsList.indexOf(d);
+      const dy = dsY[di];
+      const dx = DS_X;
+      const mx = ax + (dx - ax) * 0.55;
+      s += `<path d="M${ax},${ay} C${mx},${ay} ${mx},${dy} ${dx},${dy}" fill="none" stroke="${col}" stroke-width="1.5" stroke-opacity="0.45" stroke-linecap="round"/>`;
+      // dot at data source
+      s += `<circle cx="${dx}" cy="${dy}" r="3" fill="${col}" opacity="0.5"/>`;
+    });
+  });
+
+  // agent nodes
+  conns.forEach((c, i) => {
+    const cy = agentY[i];
+    const y  = cy - NODE_H / 2;
+    const col = TC[c.a.risk_tier] || "#94A3B8";
+    const bg  = TB[c.a.risk_tier] || "#F8FAFC";
+    const lbl = c.a.name.length > 20 ? c.a.name.slice(0,18) + "…" : c.a.name;
+    s += `<rect x="${AGENT_X}" y="${y}" width="${AGENT_W}" height="${NODE_H}" rx="8" fill="${bg}" stroke="${col}" stroke-width="1.5"/>`;
+    // tier pill
+    s += `<rect x="${AGENT_X + AGENT_W - 56}" y="${y + 7}" width="48" height="20" rx="4" fill="${col}" opacity="0.15"/>`;
+    s += `<text x="${AGENT_X + AGENT_W - 32}" y="${y + 17 + 3}" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" font-weight="700" fill="${col}" text-transform="uppercase">${c.a.risk_tier.toUpperCase()}</text>`;
+    // name
+    s += `<text x="${AGENT_X + 10}" y="${cy + 4}" font-family="system-ui,sans-serif" font-size="12" font-weight="600" fill="${col}">${lbl}</text>`;
+    // right anchor dot
+    s += `<circle cx="${AGENT_X + AGENT_W}" cy="${cy}" r="3.5" fill="${col}"/>`;
+  });
+
+  // data source nodes
+  dsList.forEach((d, i) => {
+    const cy = dsY[i];
+    const y  = cy - NODE_H / 2;
+    s += `<rect x="${DS_X}" y="${y}" width="${DS_W}" height="${NODE_H}" rx="8" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1"/>`;
+    s += `<text x="${DS_X + DS_W/2}" y="${cy + 4}" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="500" fill="#475569">${d}</text>`;
+  });
+
+  s += `</svg>`;
+  el.innerHTML = s;
 }
 
 function render(data, note) {
