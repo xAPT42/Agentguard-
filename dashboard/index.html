@@ -1137,7 +1137,7 @@ function openDrawer(name) {
     <div class="sec"><h4>Lineage</h4>${lineageHTML}</div>`;
 
   document.getElementById("drawer-seen").textContent = "Last seen: " + new Date().toLocaleString();
-  document.getElementById("drawer-datahub").href = DATAHUB_UI + "/search?query=" + encodeURIComponent(norm(a.name));
+  document.getElementById("drawer-datahub").href = DATAHUB_UI + "/search?query=" + encodeURIComponent(a.name);
   document.getElementById("drawer").classList.add("show");
   document.getElementById("overlay").classList.add("show");
 }
