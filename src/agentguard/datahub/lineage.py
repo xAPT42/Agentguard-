@@ -93,15 +93,38 @@ def _job_urn(server: dict[str, Any]) -> str:
     return f"urn:li:dataJob:({FLOW_URN},{_normalize(server.get('name', 'unknown'))})"
 
 
-def _server_datasets(server: dict[str, Any]) -> list[str]:
-    """Dataset URNs for every data source this server's tools can reach."""
+def _data_sources(server: dict[str, Any]) -> dict[str, str]:
+    """Data source label -> DataHub platform, for this server's tools."""
     tools = [str(tool).lower() for tool in server.get("tools") or []]
     found: dict[str, str] = {}
     for tool in tools:
         for keyword, label, platform in TOOL_DATA_SOURCES:
             if keyword in tool:
                 found[label] = platform
-    return [_dataset_urn(platform, label) for label, platform in sorted(found.items())]
+    return found
+
+
+def data_source_labels(server: dict[str, Any]) -> list[str]:
+    """Human-readable data sources a server's tools can reach."""
+    return sorted(_data_sources(server))
+
+
+def _server_datasets(server: dict[str, Any]) -> list[str]:
+    """Dataset URNs for every data source this server's tools can reach."""
+    return [_dataset_urn(platform, label) for label, platform in sorted(_data_sources(server).items())]
+
+
+def agent_server_links(
+    assets: list[dict[str, Any]], mcp_config_paths: list[str] | None = None
+) -> list[tuple[dict[str, Any], list[dict[str, Any]]]]:
+    """Each agent paired with the servers it actually talks to."""
+    agents = [a for a in assets if a.get("type") == "agent"]
+    servers = [a for a in assets if a.get("type") == "mcp_server"]
+    declared = _declared_servers(mcp_config_paths)
+    return [
+        (agent, [s for s in servers if _agent_connects_to(agent, s, declared)])
+        for agent in agents
+    ]
 
 
 def _declared_servers(paths: list[str] | None = None) -> set[str]:
@@ -145,20 +168,12 @@ def _edges(
     assets: list[dict[str, Any]], mcp_config_paths: list[str] | None = None
 ) -> list[tuple[str, list[str]]]:
     """(downstream_urn, upstream_urns) for agent->server and server->dataset."""
-    agents = [a for a in assets if a.get("type") == "agent"]
     servers = [a for a in assets if a.get("type") == "mcp_server"]
-    declared = _declared_servers(mcp_config_paths)
-
     edges: list[tuple[str, list[str]]] = []
 
-    for agent in agents:
-        upstreams = [
-            build_urn(server)
-            for server in servers
-            if _agent_connects_to(agent, server, declared)
-        ]
-        if upstreams:
-            edges.append((build_urn(agent), upstreams))
+    for agent, connected in agent_server_links(assets, mcp_config_paths):
+        if connected:
+            edges.append((build_urn(agent), [build_urn(s) for s in connected]))
 
     for server in servers:
         datasets = _server_datasets(server)
