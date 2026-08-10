@@ -3,8 +3,12 @@ const http = require('http');
 const NAME = "Claude MCP";
 const PORT = 3103;
 const VERSION = "1.0.0";
-const TOOLS = ["read_file", "list_directory", "search_codebase"];
 const HAS_HEALTH = true;
+const TOOLS = [
+    {"name": "read_file", "description": "Read a file from the local filesystem."},
+    {"name": "list_directory", "description": "List the entries of a directory."},
+    {"name": "search_codebase", "description": "Search the codebase for a pattern and return matches."}
+  ];
 
 const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -29,7 +33,11 @@ const server = http.createServer((req, res) => {
           protocolVersion: "2024-11-05",
           serverInfo: { name: NAME, version: VERSION },
           capabilities: { tools: {} },
-          tools: TOOLS.map(t => ({ name: t, description: t, inputSchema: { type: "object" } }))
+          tools: TOOLS.map(t => ({
+            name: t.name,
+            description: t.description,
+            inputSchema: { type: "object" }
+          }))
         }
       }));
     });

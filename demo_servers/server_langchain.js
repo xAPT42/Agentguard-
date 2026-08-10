@@ -3,8 +3,15 @@ const http = require('http');
 const NAME = "LangChain Agent";
 const PORT = 3100;
 const VERSION = "1.0.0";
-const TOOLS = ["run_shell", "http_fetch", "write_report", "read_file", "search_index", "send_email"];
 const HAS_HEALTH = true;
+const TOOLS = [
+    {"name": "run_shell", "description": "Run a shell command on the host and return its stdout."},
+    {"name": "http_fetch", "description": "Fetch a URL over HTTP and return the response body."},
+    {"name": "write_report", "description": "Write an analysis report into the reports directory."},
+    {"name": "read_file", "description": "Read a file from the local filesystem."},
+    {"name": "search_index", "description": "Query the search index and return matching documents."},
+    {"name": "send_email", "description": "Send an email to one or more recipients."}
+  ];
 
 const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -29,7 +36,11 @@ const server = http.createServer((req, res) => {
           protocolVersion: "2024-11-05",
           serverInfo: { name: NAME, version: VERSION },
           capabilities: { tools: {} },
-          tools: TOOLS.map(t => ({ name: t, description: t, inputSchema: { type: "object" } }))
+          tools: TOOLS.map(t => ({
+            name: t.name,
+            description: t.description,
+            inputSchema: { type: "object" }
+          }))
         }
       }));
     });

@@ -3,8 +3,12 @@ const http = require('http');
 const NAME = "OpenAI GPT Agent";
 const PORT = 3102;
 const VERSION = "1.0.0";
-const TOOLS = ["chat_completion", "embeddings", "file_search"];
 const HAS_HEALTH = true;
+const TOOLS = [
+    {"name": "chat_completion", "description": "Generate a chat completion for the given messages."},
+    {"name": "embeddings", "description": "Compute embedding vectors for the given input text."},
+    {"name": "file_search", "description": "Search uploaded files and return matching passages."}
+  ];
 
 const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -29,7 +33,11 @@ const server = http.createServer((req, res) => {
           protocolVersion: "2024-11-05",
           serverInfo: { name: NAME, version: VERSION },
           capabilities: { tools: {} },
-          tools: TOOLS.map(t => ({ name: t, description: t, inputSchema: { type: "object" } }))
+          tools: TOOLS.map(t => ({
+            name: t.name,
+            description: t.description,
+            inputSchema: { type: "object" }
+          }))
         }
       }));
     });

@@ -3,8 +3,11 @@ const http = require('http');
 const NAME = "Qdrant Search";
 const PORT = 3106;
 const VERSION = "1.0.0";
-const TOOLS = ["search", "upsert"];
 const HAS_HEALTH = false;
+const TOOLS = [
+    {"name": "search", "description": "Search the vector collection and return the nearest matches."},
+    {"name": "upsert", "description": "Insert or update vectors in a collection."}
+  ];
 
 const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -29,7 +32,11 @@ const server = http.createServer((req, res) => {
           protocolVersion: "2024-11-05",
           serverInfo: { name: NAME, version: VERSION },
           capabilities: { tools: {} },
-          tools: TOOLS.map(t => ({ name: t, description: t, inputSchema: { type: "object" } }))
+          tools: TOOLS.map(t => ({
+            name: t.name,
+            description: t.description,
+            inputSchema: { type: "object" }
+          }))
         }
       }));
     });

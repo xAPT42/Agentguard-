@@ -3,8 +3,11 @@ const http = require('http');
 const NAME = "Mistral Local Agent";
 const PORT = 3104;
 const VERSION = "1.0.0";
-const TOOLS = ["chat", "function_call"];
 const HAS_HEALTH = true;
+const TOOLS = [
+    {"name": "chat", "description": "Hold a conversation with the local model."},
+    {"name": "function_call", "description": "Invoke a registered function with structured arguments."}
+  ];
 
 const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -29,7 +32,11 @@ const server = http.createServer((req, res) => {
           protocolVersion: "2024-11-05",
           serverInfo: { name: NAME, version: VERSION },
           capabilities: { tools: {} },
-          tools: TOOLS.map(t => ({ name: t, description: t, inputSchema: { type: "object" } }))
+          tools: TOOLS.map(t => ({
+            name: t.name,
+            description: t.description,
+            inputSchema: { type: "object" }
+          }))
         }
       }));
     });

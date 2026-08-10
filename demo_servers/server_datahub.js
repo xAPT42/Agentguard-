@@ -3,8 +3,12 @@ const http = require('http');
 const NAME = "DataHub MCP";
 const PORT = 3108;
 const VERSION = "1.0.0";
-const TOOLS = ["get_dataset", "get_lineage"];
 const HAS_HEALTH = true;
+const TOOLS = [
+    {"name": "get_dataset", "description": "Fetch a dataset entity and its properties."},
+    {"name": "get_lineage", "description": "Fetch upstream and downstream lineage for an entity."},
+    {"name": "execute_query", "description": "Run an arbitrary SQL query against the metadata store."}
+  ];
 
 const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -29,7 +33,11 @@ const server = http.createServer((req, res) => {
           protocolVersion: "2024-11-05",
           serverInfo: { name: NAME, version: VERSION },
           capabilities: { tools: {} },
-          tools: TOOLS.map(t => ({ name: t, description: t, inputSchema: { type: "object" } }))
+          tools: TOOLS.map(t => ({
+            name: t.name,
+            description: t.description,
+            inputSchema: { type: "object" }
+          }))
         }
       }));
     });

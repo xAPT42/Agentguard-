@@ -3,8 +3,11 @@ const http = require('http');
 const NAME = "HuggingFace Inference";
 const PORT = 3105;
 const VERSION = "1.0.0";
-const TOOLS = ["text_generation", "classification"];
 const HAS_HEALTH = true;
+const TOOLS = [
+    {"name": "text_generation", "description": "Generate text continuation from a prompt."},
+    {"name": "classification", "description": "Classify the input text into the configured labels."}
+  ];
 
 const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -29,7 +32,11 @@ const server = http.createServer((req, res) => {
           protocolVersion: "2024-11-05",
           serverInfo: { name: NAME, version: VERSION },
           capabilities: { tools: {} },
-          tools: TOOLS.map(t => ({ name: t, description: t, inputSchema: { type: "object" } }))
+          tools: TOOLS.map(t => ({
+            name: t.name,
+            description: t.description,
+            inputSchema: { type: "object" }
+          }))
         }
       }));
     });
