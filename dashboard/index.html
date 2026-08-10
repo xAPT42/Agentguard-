@@ -1331,15 +1331,20 @@ function renderBlastRadius(assets) {
   const el = document.getElementById("blast-graph");
   if (!el) return;
 
+  /* Kept in sync with TOOL_DATA_SOURCES in src/agentguard/datahub/lineage.py */
   const KW = {
-    "query_db":"SQL Database","sql":"SQL Database","database":"Database",
-    "search":"Search Index","upsert":"Vector Store","vector":"Vector Store",
-    "read_file":"Filesystem","list_directory":"Filesystem","list_files":"Filesystem","delete_file":"Filesystem",
-    "get_dataset":"DataHub","get_lineage":"DataHub","search_assets":"DataHub",
-    "export":"Data Export","report":"Reports",
-    "send_email":"Email","post_message":"Messaging",
-    "spawn_agent":"Agent Network","exec_shell":"OS Shell",
-    "list_secrets":"Secrets Store"
+    "shell":"OS Shell","exec":"OS Shell",
+    "secret":"Secrets Store","credential":"Secrets Store",
+    "directory":"Filesystem","file":"Filesystem",
+    "email":"Email","mail":"Email",
+    "message":"Messaging",
+    "spawn":"Agent Network",
+    "database":"SQL Database","query":"SQL Database","sql":"SQL Database","db":"SQL Database",
+    "search":"Search Index","index":"Search Index",
+    "vector":"Vector Store","embedding":"Vector Store","upsert":"Vector Store","collection":"Vector Store",
+    "dataset":"DataHub","lineage":"DataHub","metadata":"DataHub",
+    "report":"Reports","export":"Reports",
+    "http":"External API","fetch":"External API"
   };
   const TC = { critical:"#DC2626", high:"#EA580C", medium:"#D97706", low:"#16A34A" };
   const TB = { critical:"#FEF2F2", high:"#FFF7ED", medium:"#FFFBEB", low:"#F0FDF4" };
