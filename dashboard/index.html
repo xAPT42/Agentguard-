@@ -667,15 +667,15 @@ const DATASET_KW = { postgres:"postgres", mysql:"mysql", snowflake:"snowflake", 
 
 const OWASP_ALL = [
   { code:"LLM01", name:"Prompt Injection", desc:"Untrusted content can steer this asset's shell or command tools.", detected:true },
-  { code:"LLM02", name:"Insecure Output Handling", desc:"Downstream systems trust model output without validation.", detected:false },
-  { code:"LLM03", name:"Training Data Poisoning", desc:"Training or fine-tuning data can be tampered with.", detected:false },
-  { code:"LLM04", name:"Model Denial of Service", desc:"Resource-heavy requests can exhaust the model or its host.", detected:false },
-  { code:"LLM05", name:"Supply Chain Vulnerabilities", desc:"Third-party models, plugins or packages carry inherited risk.", detected:false },
-  { code:"LLM06", name:"Sensitive Information Disclosure", desc:"The asset can reach secrets, files, or databases.", detected:true },
-  { code:"LLM07", name:"Insecure Plugin Design", desc:"Plugins accept free-form input without authorisation checks.", detected:false },
-  { code:"LLM08", name:"Excessive Agency", desc:"The toolset grants more capability than the task requires.", detected:true },
-  { code:"LLM09", name:"Overreliance", desc:"Output is acted on without human review.", detected:false },
-  { code:"LLM10", name:"Model Theft", desc:"Model weights or prompts can be exfiltrated.", detected:false }
+  { code:"LLM02", name:"Sensitive Information Disclosure", desc:"The asset can reach secrets, files, or databases.", detected:true },
+  { code:"LLM03", name:"Excessive Agency", desc:"The toolset grants more capability than the task requires.", detected:true },
+  { code:"LLM04", name:"Supply Chain", desc:"The served tool surface no longer matches the approved configuration.", detected:true },
+  { code:"LLM05", name:"Data and Model Poisoning", desc:"Training or fine-tuning data can be tampered with.", detected:false },
+  { code:"LLM06", name:"Unbounded Consumption", desc:"Resource-heavy requests can exhaust the model or its host.", detected:false },
+  { code:"LLM07", name:"Misinformation", desc:"Output is acted on without human review.", detected:false },
+  { code:"LLM08", name:"Hidden Context Exposure", desc:"System or hidden context can be extracted from the model.", detected:false },
+  { code:"LLM09", name:"Vector and Embedding Weaknesses", desc:"Retrieval stores can be poisoned or leak across tenants.", detected:false },
+  { code:"LLM10", name:"Improper Output Handling", desc:"Downstream systems trust model output without validation.", detected:false },
 ];
 const OWASP_COLOR = { LLM01: "#DC2626", LLM06: "#EA580C", LLM08: "#EA580C" };
 
@@ -851,7 +851,9 @@ function tiersOf(assets) {
   return t;
 }
 const fleetHealth = as => as.length ? Math.round(100 - as.reduce((s, a) => s + (a.risk_score || 0), 0) / as.length) : 100;
-const euReady = as => as.filter(a => disclosure(a) !== "false").length;
+/* Counting "not_applicable" as compliant let a poisoned critical asset with no
+   owner read as EU AI Act ready. Report what is actually unmet instead. */
+const euUnmetCount = as => as.filter(a => disclosure(a) === "false").length;
 
 function countUp(el, target, suffix) {
   const dur = 700, start = performance.now();
@@ -898,13 +900,13 @@ function visibleAssets() { return DATA ? sorted().filter(a => ACTIVE_FILTER === 
 
 /* ---------- KPI ---------- */
 function renderKPIs(assets) {
-  const t = tiersOf(assets), health = fleetHealth(assets), ready = euReady(assets);
+  const t = tiersOf(assets), health = fleetHealth(assets), unmet = euUnmetCount(assets);
   const hc = health >= 75 ? TIER_COLOR.low : health >= 50 ? TIER_COLOR.medium : TIER_COLOR.critical;
   const cards = [
     { label: "Total Agents", svg: SVG.grid, value: assets.length },
     { label: "Critical", svg: SVG.shieldAlert, value: t.critical, color: t.critical > 0 ? TIER_COLOR.critical : null },
     { label: "High Risk", svg: SVG.triangle, value: t.high, color: t.high > 0 ? TIER_COLOR.high : null },
-    { label: "EU AI Act Ready", svg: SVG.check, value: ready, suffix: "/" + assets.length, note: assets.length ? Math.round(ready / assets.length * 100) + "% of fleet" : "" },
+    { label: "Disclosure Unmet", svg: SVG.check, value: unmet, suffix: "/" + assets.length, note: "Art. 50 obligations" },
     { label: "Fleet Health", svg: SVG.activity, value: health, suffix: "/100", color: hc, note: "100 minus average risk" }
   ];
   document.getElementById("kpi-row").innerHTML = cards.map((c, i) => `

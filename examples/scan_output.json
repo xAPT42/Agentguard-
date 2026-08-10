@@ -99,7 +99,7 @@
       "risk_tier": "critical",
       "owasp_tags": [
         "LLM01",
-        "LLM06",
+        "LLM02",
         "MCP03"
       ],
       "propagation": {
@@ -196,7 +196,7 @@
       "risk_tier": "critical",
       "owasp_tags": [
         "LLM01",
-        "LLM06",
+        "LLM02",
         "MCP03"
       ],
       "propagation": {
@@ -329,8 +329,8 @@
       "risk_tier": "critical",
       "owasp_tags": [
         "LLM01",
-        "LLM06",
-        "LLM08"
+        "LLM02",
+        "LLM03"
       ],
       "propagation": {
         "spawns_agents": false,
@@ -401,7 +401,7 @@
       },
       "risk_tier": "high",
       "owasp_tags": [
-        "LLM06"
+        "LLM02"
       ],
       "propagation": {
         "spawns_agents": false,
@@ -477,8 +477,8 @@
       },
       "risk_tier": "medium",
       "owasp_tags": [
-        "LLM03",
-        "LLM06"
+        "LLM02",
+        "LLM04"
       ],
       "propagation": {
         "spawns_agents": false,
@@ -548,7 +548,7 @@
       },
       "risk_tier": "medium",
       "owasp_tags": [
-        "LLM06"
+        "LLM02"
       ],
       "propagation": {
         "spawns_agents": false,
@@ -669,7 +669,7 @@
       },
       "risk_tier": "low",
       "owasp_tags": [
-        "LLM06"
+        "LLM02"
       ],
       "propagation": {
         "spawns_agents": false,

@@ -12,15 +12,15 @@ Not a security dashboard bolted onto a catalog: your agent fleet governed in the
 ╭───────────────────────┬────────────┬──────────┬───────┬──────────┬─────────────────────┬───────────╮
 │ Name                  │ Type       │ Status   │ Score │ Tier     │ OWASP               │ EU AI Act │
 ├───────────────────────┼────────────┼──────────┼───────┼──────────┼─────────────────────┼───────────┤
-│ Ghost MCP             │ mcp_server │ ORPHANED │   100 │ critical │ LLM01, LLM06, MCP03 │     ✗     │
-│ Chroma VectorDB       │ mcp_server │ ACTIVE   │   100 │ critical │ LLM01, LLM06, MCP03 │     –     │
+│ Ghost MCP             │ mcp_server │ ORPHANED │   100 │ critical │ LLM01, LLM02, MCP03 │     ✗     │
+│ Chroma VectorDB       │ mcp_server │ ACTIVE   │   100 │ critical │ LLM01, LLM02, MCP03 │     –     │
 │ claude                │ agent      │ ACTIVE   │   100 │ critical │ —                   │     –     │
-│ LangChain Agent       │ mcp_server │ ACTIVE   │    99 │ critical │ LLM01, LLM06, LLM08 │     ✗     │
-│ DataHub MCP           │ mcp_server │ ACTIVE   │    49 │ medium   │ LLM03, LLM06        │     –     │
-│ Qdrant Search         │ mcp_server │ ORPHANED │    64 │ high     │ LLM06               │     –     │
-│ Claude MCP            │ mcp_server │ ACTIVE   │    44 │ medium   │ LLM06               │     –     │
+│ LangChain Agent       │ mcp_server │ ACTIVE   │    99 │ critical │ LLM01, LLM02, LLM03 │     ✗     │
+│ Qdrant Search         │ mcp_server │ ORPHANED │    64 │ high     │ LLM02               │     –     │
+│ DataHub MCP           │ mcp_server │ ACTIVE   │    49 │ medium   │ LLM02, LLM04        │     –     │
+│ Claude MCP            │ mcp_server │ ACTIVE   │    44 │ medium   │ LLM02               │     –     │
 │ Mistral Local Agent   │ mcp_server │ ACTIVE   │    40 │ medium   │ —                   │     ✗     │
-│ OpenAI GPT Agent      │ mcp_server │ ACTIVE   │     4 │ low      │ LLM06               │     ✗     │
+│ OpenAI GPT Agent      │ mcp_server │ ACTIVE   │     4 │ low      │ LLM02               │     ✗     │
 │ HuggingFace Inference │ mcp_server │ ACTIVE   │     0 │ low      │ —                   │     –     │
 ╰───────────────────────┴────────────┴──────────┴───────┴──────────┴─────────────────────┴───────────╯
 ╭─ Fleet summary ────────────────────────────────────────────────────────────────────────────────────╮
@@ -28,9 +28,9 @@ Not a security dashboard bolted onto a catalog: your agent fleet governed in the
 ╰────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ OWASP LLM Top 10 findings ────────────────────────────────────────────────────────────────────────╮
 │ LLM01  (3 assets)  Prompt Injection — untrusted content can steer this agent's shell or command…   │
-│ LLM03  (1 asset)   Supply Chain — the served tool surface no longer matches the approved config.   │
-│ LLM06  (7 assets)  Sensitive Information Disclosure — this asset can reach secrets, files, or…     │
-│ LLM08  (1 asset)   Excessive Agency — the toolset grants more capability than the task requires.   │
+│ LLM02  (7 assets)  Sensitive Information Disclosure — this asset can reach secrets, files, or…     │
+│ LLM03  (1 asset)   Excessive Agency — the toolset grants more capability than the task requires.   │
+│ LLM04  (1 asset)   Supply Chain — the served tool surface no longer matches the approved config.   │
 │ MCP03  (2 assets)  Tool Poisoning — the tool definitions this server serves carry hidden…          │
 ╰────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
@@ -229,14 +229,14 @@ Discovery is read-only. AgentGuard opens sockets and reads config files; it neve
 |---|---|---|
 | **Poisoned tool definition** | **+45** | **MCP03 / LLM01** — turns every other capability into an attack path |
 | Exposed with no authentication | +40 | Anything on the network can drive the agent |
-| Served tools diverge from approved config | +20 | **LLM03** Supply Chain — integrity, not injection |
+| Served tools diverge from approved config | +20 | **LLM04** Supply Chain — integrity, not injection |
 | Write / delete / exec tools | +25 | Actions are irreversible |
 | Shell / command tools | +20 | **LLM01** Prompt Injection |
 | ORPHANED (unsupervised) | +20 | Nobody is watching; the endpoint is claimable |
-| More than 5 tools | +10 | **LLM08** Excessive Agency |
+| More than 5 tools | +10 | **LLM03** Excessive Agency |
 | UNKNOWN | +10 | Unattributed workload |
-| API credentials in environment | +10 | **LLM06** Sensitive Information Disclosure |
-| File / database read tools | +4 | **LLM06** Sensitive Information Disclosure |
+| API credentials in environment | +10 | **LLM02** Sensitive Information Disclosure |
+| File / database read tools | +4 | **LLM02** Sensitive Information Disclosure |
 
 Poisoning scores *above* missing authentication deliberately: an unauthenticated server still only does what its tools do, while a poisoned description redirects tools the operator already trusts.
 
@@ -252,7 +252,7 @@ Two further distinctions:
 | medium | ≥ 25 |
 | low | < 25 |
 
-Findings are tagged against the **OWASP LLM Top 10**, plus **MCP03:2025** for tool poisoning.
+Findings are tagged against the [**OWASP GenAI LLM Top 10 2026**](https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/), published 4 August 2026 — not the 2023 edition OWASP now marks a historical archive, where Sensitive Information Disclosure was LLM06 and Excessive Agency was LLM08. Tool poisoning is tagged [**MCP03:2025**](https://owasp.org/www-project-mcp-top-10/2025/MCP03-2025%E2%80%93Tool-Poisoning) from the MCP Top 10.
 
 ---
 

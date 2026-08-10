@@ -42,10 +42,10 @@ STATUS_STYLES = {
 
 OWASP_DESCRIPTIONS = {
     "LLM01": "Prompt Injection — untrusted content can steer this agent's shell or command tools.",
-    "LLM06": "Sensitive Information Disclosure — this asset can reach secrets, files, or databases.",
-    "LLM08": "Excessive Agency — the toolset grants more capability than the task requires.",
+    "LLM02": "Sensitive Information Disclosure — this asset can reach secrets, files, or databases.",
+    "LLM03": "Excessive Agency — the toolset grants more capability than the task requires.",
     "MCP03": "Tool Poisoning — the tool definitions this server serves carry hidden instructions.",
-    "LLM03": "Supply Chain — the served tool surface no longer matches the approved configuration.",
+    "LLM04": "Supply Chain — the served tool surface no longer matches the approved configuration.",
 }
 
 console = Console()

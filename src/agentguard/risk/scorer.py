@@ -24,12 +24,15 @@ MUTATING_KEYWORDS = ("write", "delete", "exec", "create", "update", "drop", "rem
 SHELL_KEYWORDS = ("shell", "cmd", "command", "bash", "terminal", "subprocess")
 READ_KEYWORDS = ("file", "read", "db", "database", "query", "sql", "fetch", "get", "list", "search")
 
+# OWASP GenAI LLM Top 10 2026 (published 2026-08-04). The 2023 edition, which
+# numbered Sensitive Information Disclosure LLM06 and Excessive Agency LLM08,
+# is marked a historical archive by OWASP.
 OWASP_LABELS = {
     "LLM01": "LLM01: Prompt Injection",
-    "LLM06": "LLM06: Sensitive Information Disclosure",
-    "LLM08": "LLM08: Excessive Agency",
+    "LLM02": "LLM02: Sensitive Information Disclosure",
+    "LLM03": "LLM03: Excessive Agency",
     "MCP03": "MCP03: Tool Poisoning",
-    "LLM03": "LLM03: Supply Chain",
+    "LLM04": "LLM04: Supply Chain",
 }
 
 
@@ -92,11 +95,11 @@ def score_asset(asset: dict[str, Any]) -> dict[str, Any]:
 
     if _holds_credentials(asset):
         score += CREDENTIAL_POINTS
-        tags.append("LLM06")
+        tags.append("LLM02")
 
     if _matches(tools, READ_KEYWORDS):
         score += READ_TOOL_POINTS
-        tags.append("LLM06")
+        tags.append("LLM02")
 
     # A poisoned description turns every other capability into an attack path:
     # the model obeys the injected instruction using the tools it already has.
@@ -110,11 +113,11 @@ def score_asset(asset: dict[str, Any]) -> dict[str, Any]:
     # earns neither the injection tag nor the poisoning weight.
     if poison.get("drifted"):
         score += CONFIG_DRIFT_POINTS
-        tags.append("LLM03")
+        tags.append("LLM04")
 
     if len(tools) > TOOL_SPRAWL_THRESHOLD:
         score += TOOL_SPRAWL_POINTS
-        tags.append("LLM08")
+        tags.append("LLM03")
 
     score = min(score, MAX_SCORE)
 
