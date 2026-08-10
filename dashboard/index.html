@@ -687,7 +687,8 @@ const DIMS = [
   { key:"exposure", label:"Exposure",     max:40, color:"#ef4444" },
   { key:"agency",   label:"Agency",       max:30, color:"#f97316" },
   { key:"quality",  label:"Data Quality", max:20, color:"#eab308" },
-  { key:"owasp",    label:"OWASP",        max:10, color:"#8b5cf6" }
+  { key:"owasp",    label:"OWASP",        max:10, color:"#8b5cf6" },
+  { key:"integrity",label:"Tool integrity",max:45, color:"#dc2626" }
 ];
 
 const SVG = {
@@ -812,13 +813,19 @@ function dims(a) {
   const rawAgency = (matches(t, MUTATING_KW) ? P.MUTATING : 0) + (matches(t, SHELL_KW) ? P.SHELL : 0) + (t.length > 5 ? P.SPRAWL : 0);
   const rawQuality = st === "ORPHANED" ? P.ORPHANED : st === "UNKNOWN" ? P.UNKNOWN : 0;
   const rawOwasp = (holdsCreds(a) ? P.CREDENTIAL : 0) + (matches(t, READ_KW) ? P.READ : 0);
+  /* Poisoning and drift are scored by the scanner, not derived from the tool
+     list. Without them the breakdown sums short of the reported score and the
+     drift note fires on every poisoned asset. */
+  const po = a.poison || {};
+  const rawIntegrity = (po.poisoned ? 45 : 0) + (po.drifted ? 20 : 0);
   const cap = (v, m) => Math.min(v, m);
   const exposure = cap(rawExposure, 40), agency = cap(rawAgency, 30);
   const quality = cap(rawQuality, 20), owasp = cap(rawOwasp, 10);
+  const integrity = cap(rawIntegrity, 45);
   return {
-    exposure, agency, quality, owasp,
-    total: exposure + agency + quality + owasp,
-    raw: Math.min(100, rawExposure + rawAgency + rawQuality + rawOwasp)
+    exposure, agency, quality, owasp, integrity,
+    total: exposure + agency + quality + owasp + integrity,
+    raw: Math.min(100, rawExposure + rawAgency + rawQuality + rawOwasp + rawIntegrity)
   };
 }
 
@@ -1223,7 +1230,12 @@ function openDrawer(name) {
     : '<div class="card-sub">No connections detected for this asset.</div>';
 
   const notes = [];
-  if (d.raw !== a.risk_score)
+  const inherited = (a.propagation || {}).inherited_score || 0;
+  if (d.raw !== a.risk_score && inherited === a.risk_score)
+    /* Not a mismatch: the score came from what this asset is connected to,
+       which no per-asset breakdown can show. */
+    notes.push(`This asset's own fields produce <strong>${d.raw}</strong>. It reports <strong>${a.risk_score}</strong> because it inherits from ${esc((a.propagation.inherited_from || []).join(", "))} — see Inherited risk above.`);
+  else if (d.raw !== a.risk_score)
     notes.push(`Reported score <strong>${a.risk_score}</strong> differs from the <strong>${d.raw}</strong> these fields produce — this asset's score did not come from the current scorer.`);
   else if (d.total !== d.raw)
     notes.push(`Dimensions are clamped for display, so they total <strong>${d.total}</strong>; the scorer's uncapped signals sum to <strong>${d.raw}</strong>.`);
