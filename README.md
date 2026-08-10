@@ -1,5 +1,12 @@
 # AgentGuard
 
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)](pyproject.toml)
+[![DataHub](https://img.shields.io/badge/DataHub-MCP%20Server%20%2B%20emitter-1890FF)](https://docs.datahub.com/docs/features/feature-guides/mcp)
+[![OWASP](https://img.shields.io/badge/OWASP-GenAI%20LLM%20Top%2010%202026-000000)](https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/)
+[![MCP03](https://img.shields.io/badge/MCP03%3A2025-Tool%20Poisoning-DC2626)](https://owasp.org/www-project-mcp-top-10/2025/MCP03-2025%E2%80%93Tool-Poisoning)
+[![Tests](https://img.shields.io/badge/tests-4%20suites%20passing-16A34A)](tests/)
+
 **Your organization deploys AI agents. Do you know what their tools actually say?**
 
 AgentGuard discovers the AI agents and MCP servers running on a host, inspects the tool definitions each server **actually serves over the wire**, detects hidden instructions planted in those descriptions, and writes the whole fleet into DataHub as a connected graph — three entity types, 32 lineage edges, poisoning verdicts as tags and searchable properties.
@@ -17,6 +24,7 @@ Not a security dashboard bolted onto a catalog: your agent fleet governed in the
 │ claude                │ agent      │ ACTIVE   │   100 │ critical │ —                   │     –     │
 │ LangChain Agent       │ mcp_server │ ACTIVE   │    99 │ critical │ LLM01, LLM02, LLM03 │     ✗     │
 │ Qdrant Search         │ mcp_server │ ORPHANED │    64 │ high     │ LLM02               │     –     │
+│ datahub               │ mcp_server │ ACTIVE   │    54 │ high     │ LLM02, LLM03        │     –     │
 │ DataHub MCP           │ mcp_server │ ACTIVE   │    49 │ medium   │ LLM02, LLM04        │     –     │
 │ Claude MCP            │ mcp_server │ ACTIVE   │    44 │ medium   │ LLM02               │     –     │
 │ Mistral Local Agent   │ mcp_server │ ACTIVE   │    40 │ medium   │ —                   │     ✗     │
@@ -24,7 +32,7 @@ Not a security dashboard bolted onto a catalog: your agent fleet governed in the
 │ HuggingFace Inference │ mcp_server │ ACTIVE   │     0 │ low      │ —                   │     –     │
 ╰───────────────────────┴────────────┴──────────┴───────┴──────────┴─────────────────────┴───────────╯
 ╭─ Fleet summary ────────────────────────────────────────────────────────────────────────────────────╮
-│ 10 assets    4 critical    1 high    4 disclosure obligations unmet    fleet health 40/100        │
+│ 11 assets    4 critical    2 high    4 disclosure obligations unmet    fleet health 41/100        │
 ╰────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ OWASP LLM Top 10 findings ────────────────────────────────────────────────────────────────────────╮
 │ LLM01  (3 assets)  Prompt Injection — untrusted content can steer this agent's shell or command…   │
@@ -35,7 +43,9 @@ Not a security dashboard bolted onto a catalog: your agent fleet governed in the
 ╰────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
-Two of those ten serve tool definitions that lie to the reviewer, and a third serves a tool its approved config never declared. One of the two scores 100 for a reason no human reviewer would ever see.
+Two of those eleven serve tool definitions that lie to the reviewer, and a third serves a tool its approved config never declared. One of the two scores 100 for a reason no human reviewer would ever see.
+
+The row named `datahub` is **DataHub's own MCP Server**. AgentGuard found it by port scan, read the eight tools it serves, and checked them — they are clean. Nothing about that row was configured by hand.
 
 ![The same scan, in DataHub](docs/screenshots/05-datahub-decoded-payload.png)
 
@@ -115,6 +125,35 @@ Per entity, AgentGuard writes:
 > A reviewer searching DataHub for `Chroma VectorDB` sees a `context-poisoned` tag, an `invisible-characters` tag, and a property containing the decoded payload — without leaving the catalog.
 
 ---
+
+## Reading the graph through the MCP Server
+
+AgentGuard talks to DataHub twice, in both directions.
+
+**It writes** through the `acryl-datahub` emitter — entities, tags, ownership, properties, lineage.
+
+**It reads** through the [DataHub MCP Server](https://docs.datahub.com/docs/features/feature-guides/mcp), the same interface an agent would use. Before each write it calls `get_entities` to ask which of the assets it just discovered are already catalogued, and `get_lineage` to ask how many entities each one connects to:
+
+```
+MCP Server: 11 already catalogued, 0 new since the last scan
+```
+
+That matters because a scanner that only writes has no memory. It can report eleven assets but not say which are new. Asking the catalog makes **DataHub the memory between scans** rather than a local state file — so the next run, or the next person, inherits what this one found.
+
+Run the server against a local DataHub Core with the official package:
+
+```bash
+pip install mcp-server-datahub
+DATAHUB_GMS_URL=http://localhost:8080 \
+DATAHUB_GMS_TOKEN=$TOKEN \
+FASTMCP_PORT=8888 mcp-server-datahub --transport http
+```
+
+Point AgentGuard at it with `--mcp-url` (default `http://127.0.0.1:8888/mcp`). If it is unreachable, the scan completes and says so — assets are left unmarked rather than reported as new, because *we could not ask* and *it is not there* are different answers.
+
+### And then it scans that server too
+
+A spec-compliant MCP server issues a session on `initialize` and refuses `tools/list` until the client acknowledges it. AgentGuard originally sent a bare POST, so a real server answered with nothing and looked toolless — the largest gap this README used to admit to. With the handshake implemented, AgentGuard reads DataHub's own MCP Server like any other member of the fleet, checks its eight served tool definitions for hidden instructions, and finds none.
 
 ## Three checks, and why they need a graph
 
@@ -283,7 +322,7 @@ Stated plainly, because a judge who finds an undisclosed gap discounts everythin
 
 - **One host, not a fleet.** Discovery is localhost-only: three config paths and five ports. Multi-host is a deployment concern — the DataHub URNs are already host-agnostic.
 - **`tools/list` inspection needs an HTTP MCP server.** stdio servers (`command:` entries) are catalogued and scored, but their served descriptions cannot be read over the wire, so poisoning checks do not apply to them. This is the largest real gap.
-- **Port-discovered servers are inventoried, not inspected.** A shadow server confirmed by an `initialize` handshake gets an entity and a score, but no tool-definition analysis until it appears in a config. Assets whose definitions could not be read are marked `tool_definitions_unread` rather than reported clean.
+- **Assets whose definitions could not be read are marked, not reported clean.** `tool_definitions_unread` distinguishes *we checked and it is fine* from *we could not check*.
 - **Rug-pull detection needs two scans.** The first writes the baseline to `~/.agentguard/tool_baseline.json`; the second is the one that can fire. To see it: scan, edit a description in `demo_servers/server_qdrant.js`, scan again.
 - **EU AI Act classification is a triage floor, not a legal assessment.** Derived from AgentGuard's own scoring, not from an Annex III analysis.
 
@@ -294,6 +333,7 @@ src/agentguard/
 ├── main.py                  CLI: scan → inspect → score → propagate → narrate → publish
 ├── scanner/
 │   ├── mcp_scanner.py       Configs, ports, served tool definitions, supervision probe
+│   ├── mcp_session.py       Minimal MCP client: handshake, tools/list, tools/call
 │   └── agent_scanner.py     Processes, containers, env credentials
 ├── risk/
 │   ├── poison.py            Tool poisoning: injections, invisible payloads, drift, rug pull
@@ -301,6 +341,7 @@ src/agentguard/
 │   ├── propagation.py       Inherited risk and effective blast radius
 │   └── narrative.py         Threat narratives (composed, or via the Anthropic API)
 └── datahub/
+    ├── context.py           Reads the catalog through the DataHub MCP Server
     ├── writer.py            mlModel + tags + ownership + EU AI Act + poison + propagation
     ├── lineage.py           mlModel → dataJob → dataset chain
     └── skill.py             AgentGuardSkill, reusable from a DataHub agent
@@ -356,6 +397,7 @@ Or with pytest, if you have it: `pytest tests/`
 ## Requirements
 
 Python 3.10+ · `acryl-datahub>=0.14` · `requests>=2.31` · `rich>=13`
+For the read path: `mcp-server-datahub` (official, Apache-2.0) running against your DataHub.
 Optional: `anthropic` (for Claude-generated narratives) · Node.js (for the demo servers)
 
 ## License
