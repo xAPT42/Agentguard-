@@ -5,7 +5,7 @@
 [![DataHub](https://img.shields.io/badge/DataHub-MCP%20Server%20%2B%20emitter-1890FF)](https://docs.datahub.com/docs/features/feature-guides/mcp)
 [![OWASP](https://img.shields.io/badge/OWASP-GenAI%20LLM%20Top%2010%202026-000000)](https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/)
 [![MCP03](https://img.shields.io/badge/MCP03%3A2025-Tool%20Poisoning-DC2626)](https://owasp.org/www-project-mcp-top-10/2025/MCP03-2025%E2%80%93Tool-Poisoning)
-[![Tests](https://img.shields.io/badge/tests-4%20suites%20passing-16A34A)](tests/)
+[![Tests](https://img.shields.io/badge/tests-64%20passing-16A34A)](tests/)
 
 **Your organization deploys AI agents. Do you know what their tools actually say?**
 
@@ -383,13 +383,16 @@ agentguard --url http://localhost:8080
 
 ## Tests
 
-Four suites, all passing — including a file dedicated to descriptions that must **not** be flagged, because a scanner that cries wolf on ordinary documentation teaches its reader to ignore the next real finding.
+64 tests, all passing. A third of them exist because the code got them wrong once — a scanner that cries wolf on ordinary documentation teaches its reader to ignore the next real finding, so the false-positive file is the one that matters most.
 
 ```bash
 python3 tests/test_poison.py            # detection
 python3 tests/test_false_positives.py   # benign descriptions stay clean
+python3 tests/test_narrative.py         # never claim a capability the scan did not see
+python3 tests/test_writer.py            # what lands on a DataHub entity
 python3 tests/test_lineage.py
 python3 tests/test_propagation.py
+python3 tests/test_mcp_session.py       # SSE and plain-JSON wire formats
 ```
 
 Or with pytest, if you have it: `pytest tests/`
