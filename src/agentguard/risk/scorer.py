@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+POISONED_TOOL_POINTS = 45
 NO_AUTH_POINTS = 40
 MUTATING_TOOL_POINTS = 25
 SHELL_TOOL_POINTS = 20
@@ -26,6 +27,7 @@ OWASP_LABELS = {
     "LLM01": "LLM01: Prompt Injection",
     "LLM06": "LLM06: Sensitive Information Disclosure",
     "LLM08": "LLM08: Excessive Agency",
+    "MCP03": "MCP03: Tool Poisoning",
 }
 
 
@@ -93,6 +95,12 @@ def score_asset(asset: dict[str, Any]) -> dict[str, Any]:
     if _matches(tools, READ_KEYWORDS):
         score += READ_TOOL_POINTS
         tags.append("LLM06")
+
+    # A poisoned description turns every other capability into an attack path:
+    # the model obeys the injected instruction using the tools it already has.
+    if (asset.get("poison") or {}).get("poisoned"):
+        score += POISONED_TOOL_POINTS
+        tags.extend(["LLM01", "MCP03"])
 
     if len(tools) > TOOL_SPRAWL_THRESHOLD:
         score += TOOL_SPRAWL_POINTS

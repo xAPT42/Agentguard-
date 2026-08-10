@@ -18,6 +18,7 @@ from agentguard import __version__
 from agentguard.datahub.lineage import build_lineage
 from agentguard.datahub.skill import summarize
 from agentguard.datahub.writer import _disclosure_compliant, write_assets_to_datahub
+from agentguard.risk.poison import annotate_assets
 from agentguard.risk.scorer import score_assets
 from agentguard.scanner.agent_scanner import scan_agents
 from agentguard.scanner.mcp_scanner import scan_mcp_servers
@@ -41,6 +42,7 @@ OWASP_DESCRIPTIONS = {
     "LLM01": "Prompt Injection — untrusted content can steer this agent's shell or command tools.",
     "LLM06": "Sensitive Information Disclosure — this asset can reach secrets, files, or databases.",
     "LLM08": "Excessive Agency — the toolset grants more capability than the task requires.",
+    "MCP03": "Tool Poisoning — the tool definitions this server serves carry hidden instructions.",
 }
 
 console = Console()
@@ -76,6 +78,10 @@ def _scan_with_progress() -> list[dict[str, Any]]:
             task = progress.add_task(description, total=None)
             discovered.extend(step())
             progress.remove_task(task)
+
+        task = progress.add_task("Inspecting tool definitions...", total=None)
+        annotate_assets(discovered)
+        progress.remove_task(task)
 
         task = progress.add_task("Scoring assets...", total=None)
         scored = score_assets(discovered)

@@ -101,7 +101,27 @@ def _custom_properties(asset: dict[str, Any]) -> dict[str, str]:
         "agentguard.eu_ai_act.disclosure_compliant": _disclosure_compliant(asset),
         "agentguard.eu_ai_act.risk_category": EU_AI_ACT_RISK_CATEGORY.get(tier, "minimal-risk"),
         "agentguard.owasp_tags": ",".join(asset.get("owasp_tags") or []),
+        "agentguard.supervision": str(asset.get("supervision", "unknown")),
         "agentguard.last_seen": datetime.now(timezone.utc).isoformat(),
+        **_poison_properties(asset),
+    }
+
+
+def _poison_properties(asset: dict[str, Any]) -> dict[str, str]:
+    """Surface tool poisoning in DataHub itself, where the reviewer looks."""
+    poison = asset.get("poison") or {}
+    findings = poison.get("findings") or []
+    if not findings:
+        return {"agentguard.poison.detected": "false"}
+
+    return {
+        "agentguard.poison.detected": "true",
+        "agentguard.poison.finding_count": str(len(findings)),
+        "agentguard.poison.kinds": ",".join(sorted({f["kind"] for f in findings})),
+        "agentguard.poison.tools": ",".join(
+            sorted({f["tool"] for f in findings if f.get("tool") not in (None, "-")})
+        ),
+        "agentguard.poison.detail": findings[0]["detail"][:400],
     }
 
 
@@ -110,6 +130,11 @@ def _tags(asset: dict[str, Any]) -> list[str]:
     if str(asset.get("status", "")).upper() == "ORPHANED":
         tags.append("orphaned")
     tags.extend(asset.get("owasp_tags") or [])
+
+    findings = (asset.get("poison") or {}).get("findings") or []
+    if findings:
+        tags.append("context-poisoned")
+        tags.extend(sorted({f["kind"].replace("_", "-") for f in findings}))
     return tags
 
 
