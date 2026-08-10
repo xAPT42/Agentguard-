@@ -126,7 +126,9 @@
         "reached_via_agents": [
           "claude"
         ]
-      }
+      },
+      "threat_narrative": "Ghost MCP is an MCP server that accepts unauthenticated calls and exposes no health endpoint, so nothing is monitoring it. Its tools can run shell commands, read stored secrets, spawn child agents, delete files and send mail. The description it serves for exec_shell carries an instruction aimed at the model rather than a description of the tool. Because it can spawn agents that inherit the calling agent's configuration, its real blast radius is 11 data sources rather than the 5 its own tools touch.",
+      "narrative_source": "composed"
     },
     {
       "type": "mcp_server",
@@ -207,18 +209,20 @@
         "reached_via_agents": [
           "claude"
         ]
-      }
+      },
+      "threat_narrative": "Chroma VectorDB is an MCP server that accepts unauthenticated calls. Its tools can query the vector store. The description it serves for query_collection carries an instruction written in characters that do not render, so it passes human review while the model still reads it.",
+      "narrative_source": "composed"
     },
     {
       "type": "agent",
       "name": "claude",
       "source": "process",
-      "pid": 606074,
+      "pid": 1576209,
       "container_id": null,
       "api_keys_detected": [],
       "status": "ACTIVE",
       "risk_score": 100,
-      "command": "grep -E ^\u2502 (claude|Ghost|Chroma)|DataHub:|lineage",
+      "command": "claude",
       "poison": {
         "poisoned": false,
         "findings": [],
@@ -244,7 +248,9 @@
           "Qdrant Search"
         ],
         "poisoned_upstream": true
-      }
+      },
+      "threat_narrative": "claude is an agent that runs on this host and calls out to MCP servers. It scores as high as the worst server it talks to (Chroma VectorDB and Ghost MCP -- one of them serving a poisoned tool definition), because it is the process that would execute an injected instruction.",
+      "narrative_source": "composed"
     },
     {
       "type": "mcp_server",
@@ -341,7 +347,9 @@
         "reached_via_agents": [
           "claude"
         ]
-      }
+      },
+      "threat_narrative": "LangChain Agent is an MCP server that accepts unauthenticated calls. Its tools can run shell commands, send mail, read the filesystem and reach external hosts.",
+      "narrative_source": "composed"
     },
     {
       "type": "mcp_server",
@@ -417,7 +425,9 @@
         "reached_via_agents": [
           "claude"
         ]
-      }
+      },
+      "threat_narrative": "DataHub MCP is an MCP server that authenticates via bearer. Its tools can query databases. It serves a tool that its approved configuration never declared.",
+      "narrative_source": "composed"
     },
     {
       "type": "mcp_server",
@@ -476,7 +486,9 @@
         "reached_via_agents": [
           "claude"
         ]
-      }
+      },
+      "threat_narrative": "Qdrant Search is an MCP server that accepts unauthenticated calls and exposes no health endpoint, so nothing is monitoring it. Its tools can write to the vector store.",
+      "narrative_source": "composed"
     },
     {
       "type": "mcp_server",

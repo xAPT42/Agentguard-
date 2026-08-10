@@ -105,6 +105,17 @@ def _custom_properties(asset: dict[str, Any]) -> dict[str, str]:
         "agentguard.last_seen": datetime.now(timezone.utc).isoformat(),
         **_poison_properties(asset),
         **_propagation_properties(asset),
+        **_narrative_properties(asset),
+    }
+
+
+def _narrative_properties(asset: dict[str, Any]) -> dict[str, str]:
+    narrative = asset.get("threat_narrative")
+    if not narrative:
+        return {}
+    return {
+        "agentguard.threat_narrative": narrative[:900],
+        "agentguard.threat_narrative.source": str(asset.get("narrative_source", "composed")),
     }
 
 
