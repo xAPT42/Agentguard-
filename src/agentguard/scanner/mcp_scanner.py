@@ -11,6 +11,8 @@ from typing import Any
 
 import requests
 
+from agentguard.scanner.mcp_session import McpSession
+
 SCAN_PORTS = [3000, 5000, 8080, 8888, 9000]
 SOCKET_TIMEOUT = 1.0
 HTTP_TIMEOUT = 1.0
@@ -81,6 +83,36 @@ def _entry_tools(entry: dict[str, Any]) -> list[str]:
     return []
 
 
+def _server_name(url: str) -> str | None:
+    """The name a server gives for itself in the MCP handshake.
+
+    Port discovery otherwise labels everything mcp-port-<n>, which tells a
+    reviewer nothing about what they just found.
+    """
+    try:
+        response = requests.post(
+            url.rstrip("/") + MCP_PATH,
+            json=MCP_PROBE,
+            headers=MCP_PROBE_HEADERS,
+            timeout=HTTP_TIMEOUT * 2,
+        )
+    except requests.RequestException:
+        return None
+    if response.status_code not in (200, 202):
+        return None
+
+    text = response.text or ""
+    for chunk in (text, *(l[5:] for l in text.splitlines() if l.startswith("data:"))):
+        try:
+            body = json.loads(chunk.strip())
+        except ValueError:
+            continue
+        name = ((body.get("result") or {}).get("serverInfo") or {}).get("name")
+        if name:
+            return str(name)
+    return None
+
+
 def _health_ok(url: str) -> bool:
     """Whether the server exposes a working health endpoint.
 
@@ -101,7 +133,18 @@ def _live_tools(url: str) -> list[dict[str, str]]:
     Poisoning lives in the description a server returns, not in the client
     config that references it: a rug pull swaps the served descriptions after
     approval while the config keeps looking innocent. Trust the wire.
+
+    A spec-compliant server issues a session on initialize and refuses
+    tools/list until that is acknowledged, so the handshake runs first. Servers
+    that skip sessions answer the same calls without one.
     """
+    session = McpSession(url.rstrip("/") + MCP_PATH, timeout=HTTP_TIMEOUT * 4)
+    if session.open():
+        served = session.tools()
+        if served:
+            return served
+
+    # Older or hand-rolled servers answer initialize with the tool list inline.
     for payload in (MCP_TOOLS_PROBE, MCP_PROBE):
         try:
             response = requests.post(
@@ -123,15 +166,13 @@ def _live_tools(url: str) -> list[dict[str, str]]:
         if not isinstance(tools, list):
             continue
 
-        served: list[dict[str, str]] = []
+        served = []
         for tool in tools:
             if isinstance(tool, dict) and tool.get("name"):
-                served.append(
-                    {
-                        "name": str(tool["name"]),
-                        "description": str(tool.get("description") or ""),
-                    }
-                )
+                served.append({
+                    "name": str(tool["name"]),
+                    "description": str(tool.get("description") or ""),
+                })
             elif isinstance(tool, str):
                 served.append({"name": tool, "description": ""})
         if served:
@@ -316,12 +357,16 @@ def _from_ports(known_urls: set[str]) -> list[dict[str, Any]]:
         security = _probe_mcp(url)
         if security is None:
             continue
+        served = _live_tools(url)
+        name = _server_name(url)
         assets.append(
             {
                 "type": "mcp_server",
-                "name": f"mcp-port-{port}",
+                "name": name or f"mcp-port-{port}",
                 "url": url,
-                "tools": [],
+                "tools": [tool["name"] for tool in served],
+                "tool_details": served,
+                "declared_tools": [],
                 "status": "ACTIVE",
                 "discovered_via": "port_scan",
                 "security": security,

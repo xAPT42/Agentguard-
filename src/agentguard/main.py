@@ -15,6 +15,7 @@ from rich.table import Table
 from rich.text import Text
 
 from agentguard import __version__
+from agentguard.datahub.context import read_catalog_context
 from agentguard.datahub.lineage import attach_downstream_jobs, build_lineage
 from agentguard.datahub.skill import summarize
 from agentguard.datahub.writer import _disclosure_compliant, write_assets_to_datahub
@@ -59,6 +60,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--url", help="DataHub GMS URL (default: $DATAHUB_URL or http://localhost:8080)")
     parser.add_argument("--token", help="DataHub access token (default: $DATAHUB_TOKEN)")
     parser.add_argument("--output", default=DEFAULT_OUTPUT, help=f"scan report path (default: {DEFAULT_OUTPUT})")
+    parser.add_argument("--mcp-url", help="DataHub MCP Server URL (default: $DATAHUB_MCP_URL or http://127.0.0.1:8888/mcp)")
     parser.add_argument("--no-datahub", action="store_true", help="dry run: scan and score without writing to DataHub")
     parser.add_argument("--version", action="version", version=f"agentguard {__version__}")
     return parser.parse_args(argv)
@@ -239,6 +241,18 @@ def main(argv: list[str] | None = None) -> int:
     if args.no_datahub:
         console.print("[yellow][DRY RUN] DataHub write-back skipped[/yellow]")
     else:
+        # Read the catalog through DataHub's MCP Server before writing to it,
+        # so the run can say which assets are new rather than just how many
+        # exist. DataHub, not a local file, is the memory between scans.
+        context = read_catalog_context(assets, mcp_url=args.mcp_url, token=args.token)
+        if context.get("available"):
+            console.print(
+                f"[dim]MCP Server: {context['already_catalogued']} already catalogued, "
+                f"{context['new_since_last_scan']} new since the last scan[/dim]"
+            )
+        else:
+            console.print(f"[yellow]WARN: {context.get('reason')}[/yellow]")
+
         attach_downstream_jobs(assets)
         result = write_assets_to_datahub(assets, url=args.url, token=args.token)
         console.print(f"[dim]DataHub: {result['written']} written, {result['failed']} failed[/dim]")
