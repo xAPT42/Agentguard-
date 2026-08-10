@@ -27,6 +27,7 @@ MCP_PROBE = {
         "clientInfo": {"name": "agentguard", "version": "0.1.0"},
     },
 }
+MCP_TOOLS_PROBE = {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}
 MCP_PROBE_HEADERS = {"Accept": "application/json, text/event-stream"}
 MCP_BODY_MARKERS = ("jsonrpc", "protocolversion", "serverinfo", "result")
 MCP_AUTH_STATUSES = (401, 403)
@@ -77,6 +78,64 @@ def _entry_tools(entry: dict[str, Any]) -> list[str]:
         return sorted(str(name) for name in tools)
     if isinstance(tools, list):
         return [str(tool) for tool in tools]
+    return []
+
+
+def _health_ok(url: str) -> bool:
+    """Whether the server exposes a working health endpoint.
+
+    A listening port proves a process exists, not that anyone supervises it.
+    A server answering MCP with no /health route is exactly the ghost case:
+    running, reachable, and outside every monitoring loop.
+    """
+    try:
+        response = requests.get(url.rstrip("/") + "/health", timeout=HTTP_TIMEOUT)
+    except requests.RequestException:
+        return False
+    return 200 <= response.status_code < 300
+
+
+def _live_tools(url: str) -> list[dict[str, str]]:
+    """Tool definitions as the server actually serves them.
+
+    Poisoning lives in the description a server returns, not in the client
+    config that references it: a rug pull swaps the served descriptions after
+    approval while the config keeps looking innocent. Trust the wire.
+    """
+    for payload in (MCP_TOOLS_PROBE, MCP_PROBE):
+        try:
+            response = requests.post(
+                url.rstrip("/") + MCP_PATH,
+                json=payload,
+                headers=MCP_PROBE_HEADERS,
+                timeout=HTTP_TIMEOUT,
+            )
+        except requests.RequestException:
+            continue
+        if response.status_code not in (200, 202):
+            continue
+        try:
+            body = response.json()
+        except ValueError:
+            continue
+
+        tools = (body.get("result") or {}).get("tools")
+        if not isinstance(tools, list):
+            continue
+
+        served: list[dict[str, str]] = []
+        for tool in tools:
+            if isinstance(tool, dict) and tool.get("name"):
+                served.append(
+                    {
+                        "name": str(tool["name"]),
+                        "description": str(tool.get("description") or ""),
+                    }
+                )
+            elif isinstance(tool, str):
+                served.append({"name": tool, "description": ""})
+        if served:
+            return served
     return []
 
 
@@ -196,13 +255,24 @@ def _from_configs() -> list[dict[str, Any]]:
             seen.add(name)
             url = _entry_url(entry)
             alive = _url_alive(url) if url else _command_alive(entry)
+            declared = _entry_tools(entry)
+            served = _live_tools(url) if url and alive else []
+            if not alive:
+                supervision = "unreachable"
+            elif url and _health_ok(url):
+                supervision = "healthy"
+            else:
+                supervision = "no_health_endpoint"
             assets.append(
                 {
                     "type": "mcp_server",
                     "name": name,
                     "url": url or entry.get("command") or "",
-                    "tools": _entry_tools(entry),
-                    "status": "ACTIVE" if alive else "ORPHANED",
+                    "tools": [tool["name"] for tool in served] or declared,
+                    "tool_details": served,
+                    "declared_tools": declared,
+                    "status": "ACTIVE" if supervision == "healthy" else "ORPHANED",
+                    "supervision": supervision,
                     "discovered_via": "config",
                     "security": _detect_auth(entry),
                     "risk_score": 0,
