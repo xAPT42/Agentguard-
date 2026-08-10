@@ -19,6 +19,7 @@ from agentguard.datahub.lineage import build_lineage
 from agentguard.datahub.skill import summarize
 from agentguard.datahub.writer import _disclosure_compliant, write_assets_to_datahub
 from agentguard.risk.poison import annotate_assets
+from agentguard.risk.propagation import propagate
 from agentguard.risk.scorer import score_assets
 from agentguard.scanner.agent_scanner import scan_agents
 from agentguard.scanner.mcp_scanner import scan_mcp_servers
@@ -85,6 +86,10 @@ def _scan_with_progress() -> list[dict[str, Any]]:
 
         task = progress.add_task("Scoring assets...", total=None)
         scored = score_assets(discovered)
+        progress.remove_task(task)
+
+        task = progress.add_task("Propagating risk across the fleet...", total=None)
+        propagate(scored)
         progress.remove_task(task)
 
     return scored

@@ -104,6 +104,34 @@ def _custom_properties(asset: dict[str, Any]) -> dict[str, str]:
         "agentguard.supervision": str(asset.get("supervision", "unknown")),
         "agentguard.last_seen": datetime.now(timezone.utc).isoformat(),
         **_poison_properties(asset),
+        **_propagation_properties(asset),
+    }
+
+
+def _propagation_properties(asset: dict[str, Any]) -> dict[str, str]:
+    """Risk an asset takes on from the fleet, not from its own configuration."""
+    propagation = asset.get("propagation") or {}
+    if not propagation:
+        return {}
+
+    if asset.get("type") == "agent":
+        return {
+            "agentguard.propagation.inherited_score": str(propagation.get("inherited_score", 0)),
+            "agentguard.propagation.inherited_from": ",".join(propagation.get("inherited_from") or []),
+            "agentguard.propagation.poisoned_upstream": str(
+                bool(propagation.get("poisoned_upstream"))
+            ).lower(),
+        }
+
+    return {
+        "agentguard.propagation.spawns_agents": str(bool(propagation.get("spawns_agents"))).lower(),
+        "agentguard.propagation.direct_data_sources": ",".join(
+            propagation.get("direct_data_sources") or []
+        ),
+        "agentguard.propagation.effective_data_sources": ",".join(
+            propagation.get("effective_data_sources") or []
+        ),
+        "agentguard.propagation.amplification": str(propagation.get("amplification", 0)),
     }
 
 

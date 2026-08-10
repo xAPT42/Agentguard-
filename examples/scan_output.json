@@ -3,16 +3,16 @@
   "summary": {
     "total": 10,
     "by_risk_tier": {
-      "critical": 3,
+      "critical": 4,
       "high": 2,
       "medium": 2,
-      "low": 3
+      "low": 2
     },
     "by_status": {
       "ORPHANED": 2,
       "ACTIVE": 8
     },
-    "critical_count": 3
+    "critical_count": 4
   },
   "assets": [
     {
@@ -99,7 +99,34 @@
         "LLM01",
         "LLM06",
         "MCP03"
-      ]
+      ],
+      "propagation": {
+        "spawns_agents": true,
+        "direct_data_sources": [
+          "Agent Network",
+          "Email",
+          "Filesystem",
+          "OS Shell",
+          "Secrets Store"
+        ],
+        "effective_data_sources": [
+          "Agent Network",
+          "DataHub",
+          "Email",
+          "External API",
+          "Filesystem",
+          "OS Shell",
+          "Reports",
+          "SQL Database",
+          "Search Index",
+          "Secrets Store",
+          "Vector Store"
+        ],
+        "amplification": 6,
+        "reached_via_agents": [
+          "claude"
+        ]
+      }
     },
     {
       "type": "mcp_server",
@@ -165,7 +192,59 @@
         "LLM01",
         "LLM06",
         "MCP03"
-      ]
+      ],
+      "propagation": {
+        "spawns_agents": false,
+        "direct_data_sources": [
+          "SQL Database",
+          "Vector Store"
+        ],
+        "effective_data_sources": [
+          "SQL Database",
+          "Vector Store"
+        ],
+        "amplification": 0,
+        "reached_via_agents": [
+          "claude"
+        ]
+      }
+    },
+    {
+      "type": "agent",
+      "name": "claude",
+      "source": "process",
+      "pid": 606074,
+      "container_id": null,
+      "api_keys_detected": [],
+      "status": "ACTIVE",
+      "risk_score": 100,
+      "command": "grep -E ^\u2502 (claude|Ghost|Chroma)|DataHub:|lineage",
+      "poison": {
+        "poisoned": false,
+        "findings": [],
+        "tool_hashes": {}
+      },
+      "risk_tier": "critical",
+      "owasp_tags": [],
+      "propagation": {
+        "inherited_score": 100,
+        "inherited_from": [
+          "Chroma VectorDB",
+          "Ghost MCP"
+        ],
+        "connected_servers": [
+          "Chroma VectorDB",
+          "Claude MCP",
+          "DataHub MCP",
+          "Ghost MCP",
+          "HuggingFace Inference",
+          "LangChain Agent",
+          "Mistral Local Agent",
+          "OpenAI GPT Agent",
+          "Qdrant Search"
+        ],
+        "poisoned_upstream": true
+      }
     },
     {
       "type": "mcp_server",
@@ -239,7 +318,30 @@
         "LLM01",
         "LLM06",
         "LLM08"
-      ]
+      ],
+      "propagation": {
+        "spawns_agents": false,
+        "direct_data_sources": [
+          "Email",
+          "External API",
+          "Filesystem",
+          "OS Shell",
+          "Reports",
+          "Search Index"
+        ],
+        "effective_data_sources": [
+          "Email",
+          "External API",
+          "Filesystem",
+          "OS Shell",
+          "Reports",
+          "Search Index"
+        ],
+        "amplification": 0,
+        "reached_via_agents": [
+          "claude"
+        ]
+      }
     },
     {
       "type": "mcp_server",
@@ -298,7 +400,24 @@
         "LLM01",
         "LLM06",
         "MCP03"
-      ]
+      ],
+      "propagation": {
+        "spawns_agents": false,
+        "direct_data_sources": [
+          "DataHub",
+          "OS Shell",
+          "SQL Database"
+        ],
+        "effective_data_sources": [
+          "DataHub",
+          "OS Shell",
+          "SQL Database"
+        ],
+        "amplification": 0,
+        "reached_via_agents": [
+          "claude"
+        ]
+      }
     },
     {
       "type": "mcp_server",
@@ -342,7 +461,22 @@
       "risk_tier": "high",
       "owasp_tags": [
         "LLM06"
-      ]
+      ],
+      "propagation": {
+        "spawns_agents": false,
+        "direct_data_sources": [
+          "Search Index",
+          "Vector Store"
+        ],
+        "effective_data_sources": [
+          "Search Index",
+          "Vector Store"
+        ],
+        "amplification": 0,
+        "reached_via_agents": [
+          "claude"
+        ]
+      }
     },
     {
       "type": "mcp_server",
@@ -393,7 +527,22 @@
       "risk_tier": "medium",
       "owasp_tags": [
         "LLM06"
-      ]
+      ],
+      "propagation": {
+        "spawns_agents": false,
+        "direct_data_sources": [
+          "Filesystem",
+          "Search Index"
+        ],
+        "effective_data_sources": [
+          "Filesystem",
+          "Search Index"
+        ],
+        "amplification": 0,
+        "reached_via_agents": [
+          "claude"
+        ]
+      }
     },
     {
       "type": "mcp_server",
@@ -435,7 +584,16 @@
         }
       },
       "risk_tier": "medium",
-      "owasp_tags": []
+      "owasp_tags": [],
+      "propagation": {
+        "spawns_agents": false,
+        "direct_data_sources": [],
+        "effective_data_sources": [],
+        "amplification": 0,
+        "reached_via_agents": [
+          "claude"
+        ]
+      }
     },
     {
       "type": "mcp_server",
@@ -486,7 +644,24 @@
       "risk_tier": "low",
       "owasp_tags": [
         "LLM06"
-      ]
+      ],
+      "propagation": {
+        "spawns_agents": false,
+        "direct_data_sources": [
+          "Filesystem",
+          "Search Index",
+          "Vector Store"
+        ],
+        "effective_data_sources": [
+          "Filesystem",
+          "Search Index",
+          "Vector Store"
+        ],
+        "amplification": 0,
+        "reached_via_agents": [
+          "claude"
+        ]
+      }
     },
     {
       "type": "mcp_server",
@@ -528,25 +703,16 @@
         }
       },
       "risk_tier": "low",
-      "owasp_tags": []
-    },
-    {
-      "type": "agent",
-      "name": "claude",
-      "source": "process",
-      "pid": 1576209,
-      "container_id": null,
-      "api_keys_detected": [],
-      "status": "ACTIVE",
-      "risk_score": 0,
-      "command": "claude",
-      "poison": {
-        "poisoned": false,
-        "findings": [],
-        "tool_hashes": {}
-      },
-      "risk_tier": "low",
-      "owasp_tags": []
+      "owasp_tags": [],
+      "propagation": {
+        "spawns_agents": false,
+        "direct_data_sources": [],
+        "effective_data_sources": [],
+        "amplification": 0,
+        "reached_via_agents": [
+          "claude"
+        ]
+      }
     }
   ]
 }
