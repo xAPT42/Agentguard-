@@ -6,6 +6,7 @@
 [![OWASP](https://img.shields.io/badge/OWASP-GenAI%20LLM%20Top%2010%202026-000000)](https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/)
 [![MCP03](https://img.shields.io/badge/MCP03%3A2025-Tool%20Poisoning-DC2626)](https://owasp.org/www-project-mcp-top-10/2025/MCP03-2025%E2%80%93Tool-Poisoning)
 [![Tests](https://img.shields.io/badge/tests-64%20passing-16A34A)](tests/)
+[![Live dashboard](https://img.shields.io/badge/live-dashboard-6366F1)](https://agentguard-tau.vercel.app/dashboard/index.html)
 
 **Your organization deploys AI agents. Do you know what their tools actually say?**
 
@@ -70,6 +71,8 @@ The row named `datahub` is **DataHub's own MCP Server**. AgentGuard found it by 
 | **EU AI Act fields** | Owner, data access scope, disclosure, risk category, written onto every entity |
 | **OWASP mapping** | Tagged against the GenAI LLM Top 10 2026, plus MCP03:2025 for tool poisoning |
 | **CI gate** | Exits non-zero on any critical finding |
+
+**[Live dashboard](https://agentguard-tau.vercel.app/dashboard/index.html)** reading a real scan, no setup required.
 
 **Dashboard** (`dashboard/index.html`, no build step): five views over the same scan, a live threat feed driven by the current findings, an SVG blast-radius graph, and three exports.
 
