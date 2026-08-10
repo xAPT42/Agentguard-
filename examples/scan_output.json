@@ -4,8 +4,8 @@
     "total": 10,
     "by_risk_tier": {
       "critical": 4,
-      "high": 2,
-      "medium": 2,
+      "high": 1,
+      "medium": 3,
       "low": 2
     },
     "by_status": {
@@ -55,6 +55,7 @@
         "list_secrets",
         "delete_file"
       ],
+      "tool_definitions_unread": false,
       "status": "ORPHANED",
       "supervision": "no_health_endpoint",
       "discovered_via": "config",
@@ -66,6 +67,7 @@
       "config_path": "/root/projects/agentguard/.mcp.json",
       "poison": {
         "poisoned": true,
+        "drifted": false,
         "findings": [
           {
             "tool": "exec_shell",
@@ -158,6 +160,7 @@
         "insert",
         "delete"
       ],
+      "tool_definitions_unread": false,
       "status": "ACTIVE",
       "supervision": "healthy",
       "discovered_via": "config",
@@ -169,6 +172,7 @@
       "config_path": "/root/projects/agentguard/.mcp.json",
       "poison": {
         "poisoned": true,
+        "drifted": false,
         "findings": [
           {
             "tool": "query_collection",
@@ -225,6 +229,7 @@
       "command": "claude",
       "poison": {
         "poisoned": false,
+        "drifted": false,
         "findings": [],
         "tool_hashes": {}
       },
@@ -298,6 +303,7 @@
         "search_index",
         "send_email"
       ],
+      "tool_definitions_unread": false,
       "status": "ACTIVE",
       "supervision": "healthy",
       "discovered_via": "config",
@@ -309,6 +315,7 @@
       "config_path": "/root/projects/agentguard/.mcp.json",
       "poison": {
         "poisoned": false,
+        "drifted": false,
         "findings": [],
         "tool_hashes": {
           "run_shell": "843433cb278b7ce557fa424f9e46c1e292ee843263a9ec9f2b23ce2fa1dbb5b1",
@@ -353,84 +360,6 @@
     },
     {
       "type": "mcp_server",
-      "name": "DataHub MCP",
-      "url": "http://127.0.0.1:3108",
-      "tools": [
-        "get_dataset",
-        "get_lineage",
-        "execute_query"
-      ],
-      "tool_details": [
-        {
-          "name": "get_dataset",
-          "description": "Fetch a dataset entity and its properties."
-        },
-        {
-          "name": "get_lineage",
-          "description": "Fetch upstream and downstream lineage for an entity."
-        },
-        {
-          "name": "execute_query",
-          "description": "Run an arbitrary SQL query against the metadata store."
-        }
-      ],
-      "declared_tools": [
-        "get_dataset",
-        "get_lineage"
-      ],
-      "status": "ACTIVE",
-      "supervision": "healthy",
-      "discovered_via": "config",
-      "security": {
-        "requires_auth": true,
-        "auth_type": "bearer"
-      },
-      "risk_score": 74,
-      "config_path": "/root/projects/agentguard/.mcp.json",
-      "poison": {
-        "poisoned": true,
-        "findings": [
-          {
-            "tool": "-",
-            "kind": "config_drift",
-            "detail": "server disagrees with approved config: serving undeclared ['execute_query']",
-            "severity": "high"
-          }
-        ],
-        "tool_hashes": {
-          "get_dataset": "d5a2a3002fb313e88d2463cbda09118a15da1163156b69ec14a65c26cae2dfad",
-          "get_lineage": "e1eb1cf4a2bbc7da5daa3b7471ce76f9de9844ad8681b168131fad4c38eaa64c",
-          "execute_query": "a06bf345de2270471bd377297ce03016fcf13bdd2e1fbd16345cbc88bf52f3e6"
-        }
-      },
-      "risk_tier": "high",
-      "owasp_tags": [
-        "LLM01",
-        "LLM06",
-        "MCP03"
-      ],
-      "propagation": {
-        "spawns_agents": false,
-        "direct_data_sources": [
-          "DataHub",
-          "OS Shell",
-          "SQL Database"
-        ],
-        "effective_data_sources": [
-          "DataHub",
-          "OS Shell",
-          "SQL Database"
-        ],
-        "amplification": 0,
-        "reached_via_agents": [
-          "claude"
-        ]
-      },
-      "threat_narrative": "DataHub MCP is an MCP server that authenticates via bearer. Its tools can query databases. It serves a tool that its approved configuration never declared.",
-      "narrative_source": "composed"
-    },
-    {
-      "type": "mcp_server",
       "name": "Qdrant Search",
       "url": "http://127.0.0.1:3106",
       "tools": [
@@ -451,6 +380,7 @@
         "search",
         "upsert"
       ],
+      "tool_definitions_unread": false,
       "status": "ORPHANED",
       "supervision": "no_health_endpoint",
       "discovered_via": "config",
@@ -462,6 +392,7 @@
       "config_path": "/root/projects/agentguard/.mcp.json",
       "poison": {
         "poisoned": false,
+        "drifted": false,
         "findings": [],
         "tool_hashes": {
           "search": "a522d03d5153a590dac3f5ad106e45a6a731458bde5f9908b133de9e8f52b7f7",
@@ -492,6 +423,83 @@
     },
     {
       "type": "mcp_server",
+      "name": "DataHub MCP",
+      "url": "http://127.0.0.1:3108",
+      "tools": [
+        "get_dataset",
+        "get_lineage",
+        "execute_query"
+      ],
+      "tool_details": [
+        {
+          "name": "get_dataset",
+          "description": "Fetch a dataset entity and its properties."
+        },
+        {
+          "name": "get_lineage",
+          "description": "Fetch upstream and downstream lineage for an entity."
+        },
+        {
+          "name": "execute_query",
+          "description": "Run an arbitrary SQL query against the metadata store."
+        }
+      ],
+      "declared_tools": [
+        "get_dataset",
+        "get_lineage"
+      ],
+      "tool_definitions_unread": false,
+      "status": "ACTIVE",
+      "supervision": "healthy",
+      "discovered_via": "config",
+      "security": {
+        "requires_auth": true,
+        "auth_type": "bearer"
+      },
+      "risk_score": 49,
+      "config_path": "/root/projects/agentguard/.mcp.json",
+      "poison": {
+        "poisoned": false,
+        "drifted": true,
+        "findings": [
+          {
+            "tool": "-",
+            "kind": "config_drift",
+            "detail": "server disagrees with approved config: serving undeclared ['execute_query']",
+            "severity": "high"
+          }
+        ],
+        "tool_hashes": {
+          "get_dataset": "d5a2a3002fb313e88d2463cbda09118a15da1163156b69ec14a65c26cae2dfad",
+          "get_lineage": "e1eb1cf4a2bbc7da5daa3b7471ce76f9de9844ad8681b168131fad4c38eaa64c",
+          "execute_query": "a06bf345de2270471bd377297ce03016fcf13bdd2e1fbd16345cbc88bf52f3e6"
+        }
+      },
+      "risk_tier": "medium",
+      "owasp_tags": [
+        "LLM03",
+        "LLM06"
+      ],
+      "propagation": {
+        "spawns_agents": false,
+        "direct_data_sources": [
+          "DataHub",
+          "OS Shell",
+          "SQL Database"
+        ],
+        "effective_data_sources": [
+          "DataHub",
+          "OS Shell",
+          "SQL Database"
+        ],
+        "amplification": 0,
+        "reached_via_agents": [
+          "claude"
+        ]
+      }
+    },
+    {
+      "type": "mcp_server",
       "name": "Claude MCP",
       "url": "http://127.0.0.1:3103",
       "tools": [
@@ -518,6 +526,7 @@
         "list_directory",
         "search_codebase"
       ],
+      "tool_definitions_unread": false,
       "status": "ACTIVE",
       "supervision": "healthy",
       "discovered_via": "config",
@@ -529,6 +538,7 @@
       "config_path": "/root/projects/agentguard/.mcp.json",
       "poison": {
         "poisoned": false,
+        "drifted": false,
         "findings": [],
         "tool_hashes": {
           "read_file": "224c5737590cfaa8383a057c37056f940d8ced5dd981f8d476851c4ac132548a",
@@ -578,6 +588,7 @@
         "chat",
         "function_call"
       ],
+      "tool_definitions_unread": false,
       "status": "ACTIVE",
       "supervision": "healthy",
       "discovered_via": "config",
@@ -589,6 +600,7 @@
       "config_path": "/root/projects/agentguard/.mcp.json",
       "poison": {
         "poisoned": false,
+        "drifted": false,
         "findings": [],
         "tool_hashes": {
           "chat": "fb185101bc95e9ac19e94c61332428a3a721f5f2f3cbc2095dacd9abb06f676f",
@@ -635,6 +647,7 @@
         "embeddings",
         "file_search"
       ],
+      "tool_definitions_unread": false,
       "status": "ACTIVE",
       "supervision": "healthy",
       "discovered_via": "config",
@@ -646,6 +659,7 @@
       "config_path": "/root/projects/agentguard/.mcp.json",
       "poison": {
         "poisoned": false,
+        "drifted": false,
         "findings": [],
         "tool_hashes": {
           "chat_completion": "65d5577b60efd6944a4985ca26146cc6300af615a1a4bffdc0aab42c8d9a00e5",
@@ -697,6 +711,7 @@
         "text_generation",
         "classification"
       ],
+      "tool_definitions_unread": false,
       "status": "ACTIVE",
       "supervision": "healthy",
       "discovered_via": "config",
@@ -708,6 +723,7 @@
       "config_path": "/root/projects/agentguard/.mcp.json",
       "poison": {
         "poisoned": false,
+        "drifted": false,
         "findings": [],
         "tool_hashes": {
           "text_generation": "3ca7764fcd2a63a0c2ed7ac11689ce6b9338d78d3857c5d1e2a16a9bfb9647c2",

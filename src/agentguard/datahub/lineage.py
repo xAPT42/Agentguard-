@@ -24,7 +24,6 @@ try:
         DataJobInfoClass,
         DataJobInputOutputClass,
         DatasetPropertiesClass,
-        MLModelPropertiesClass,
     )
 
     DATAHUB_AVAILABLE = True
@@ -183,6 +182,20 @@ def _edges(
     return edges
 
 
+def attach_downstream_jobs(
+    assets: list[dict[str, Any]], mcp_config_paths: list[str] | None = None
+) -> list[dict[str, Any]]:
+    """Record, on each agent, the dataJobs for the servers it talks to.
+
+    The writer folds this into the single MLModelProperties aspect it emits.
+    Emitting a second, thinner aspect here would silently replace the first:
+    DataHub upserts a non-timeseries aspect as a whole value, it does not merge.
+    """
+    for agent, servers in agent_server_links(assets, mcp_config_paths):
+        agent["downstream_jobs"] = [_job_urn(server) for server in servers]
+    return assets
+
+
 def build_lineage(
     assets: list[dict[str, Any]],
     url: str | None = None,
@@ -242,18 +255,9 @@ def build_lineage(
             if emit(job_urn, DataJobInputOutputClass(inputDatasets=list(upstream_urns), outputDatasets=[])):
                 emitted += len(upstream_urns)
         else:
-            # agent -> servers, via the servers' dataJobs.
-            job_urns = [
-                _job_urn(servers[urn]) for urn in upstream_urns if urn in servers
-            ]
-            if not job_urns:
-                continue
-            name = downstream_urn.split(",")[1]
-            if emit(
-                downstream_urn,
-                MLModelPropertiesClass(name=name, downstreamJobs=job_urns),
-            ):
-                emitted += len(job_urns)
+            # agent -> servers: carried by MLModelProperties.downstreamJobs,
+            # which the writer emits as part of the asset's single aspect.
+            emitted += sum(1 for urn in upstream_urns if urn in servers)
 
     suffix = f", {failures} failed" if failures else ""
     print(f"INFO: emitted {emitted} lineage edge(s){suffix}")

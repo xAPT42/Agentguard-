@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 POISONED_TOOL_POINTS = 45
+CONFIG_DRIFT_POINTS = 20
 NO_AUTH_POINTS = 40
 MUTATING_TOOL_POINTS = 25
 SHELL_TOOL_POINTS = 20
@@ -28,6 +29,7 @@ OWASP_LABELS = {
     "LLM06": "LLM06: Sensitive Information Disclosure",
     "LLM08": "LLM08: Excessive Agency",
     "MCP03": "MCP03: Tool Poisoning",
+    "LLM03": "LLM03: Supply Chain",
 }
 
 
@@ -98,9 +100,17 @@ def score_asset(asset: dict[str, Any]) -> dict[str, Any]:
 
     # A poisoned description turns every other capability into an attack path:
     # the model obeys the injected instruction using the tools it already has.
-    if (asset.get("poison") or {}).get("poisoned"):
+    poison = asset.get("poison") or {}
+    if poison.get("poisoned"):
         score += POISONED_TOOL_POINTS
         tags.extend(["LLM01", "MCP03"])
+
+    # Drift is an integrity problem, not an injection: the served surface no
+    # longer matches the approved one. It carries no hidden instruction, so it
+    # earns neither the injection tag nor the poisoning weight.
+    if poison.get("drifted"):
+        score += CONFIG_DRIFT_POINTS
+        tags.append("LLM03")
 
     if len(tools) > TOOL_SPRAWL_THRESHOLD:
         score += TOOL_SPRAWL_POINTS

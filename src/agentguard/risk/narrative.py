@@ -28,18 +28,23 @@ SYSTEM = (
     "no bullet points, no hedging."
 )
 
-# Matched against whole tool names, so the phrase claimed is the capability the
-# tool actually has. Loose substrings overclaim: "exec" hits `execute_query`
-# (a SQL call, not a shell) and "delete" hits `delete` on a vector collection
-# (documents, not files). A narrative that invents a capability is worse than
-# no narrative.
+# Matched as substrings of a tool name, so each keyword must be specific enough
+# that the phrase is true of every tool it hits - which means carrying the verb
+# wherever direction matters. Bare nouns overclaim in both axes: "exec" hits
+# `execute_query` (a SQL call, not a shell), "delete" hits deleting documents
+# from a vector collection, and "email" hits `read_email`, which sends nothing.
+# A narrative that invents a capability is worse than no narrative.
 CAPABILITY_PHRASES = (
     ("shell", "run shell commands"),
-    ("secret", "read stored secrets"),
-    ("credential", "read stored secrets"),
+    ("list_secret", "read stored secrets"),
+    ("get_secret", "read stored secrets"),
+    ("read_secret", "read stored secrets"),
+    ("list_credential", "read stored secrets"),
+    ("get_credential", "read stored secrets"),
     ("spawn", "spawn child agents"),
     ("delete_file", "delete files"),
-    ("email", "send mail"),
+    ("send_email", "send mail"),
+    ("send_mail", "send mail"),
     ("read_file", "read the filesystem"),
     ("list_director", "read the filesystem"),
     ("execute_query", "query databases"),

@@ -154,7 +154,8 @@ def _poison_properties(asset: dict[str, Any]) -> dict[str, str]:
         return {"agentguard.poison.detected": "false"}
 
     return {
-        "agentguard.poison.detected": "true",
+        "agentguard.poison.detected": str(bool(poison.get("poisoned"))).lower(),
+        "agentguard.drift.detected": str(bool(poison.get("drifted"))).lower(),
         "agentguard.poison.finding_count": str(len(findings)),
         "agentguard.poison.kinds": ",".join(sorted({f["kind"] for f in findings})),
         "agentguard.poison.tools": ",".join(
@@ -170,11 +171,16 @@ def _tags(asset: dict[str, Any]) -> list[str]:
         tags.append("orphaned")
     tags.extend(asset.get("owasp_tags") or [])
 
-    findings = (asset.get("poison") or {}).get("findings") or []
-    if findings:
+    poison = asset.get("poison") or {}
+    findings = poison.get("findings") or []
+    if poison.get("poisoned"):
         tags.append("context-poisoned")
-        tags.extend(sorted({f["kind"].replace("_", "-") for f in findings}))
-    return tags
+    if poison.get("drifted"):
+        tags.append("config-drift")
+    tags.extend(sorted({f["kind"].replace("_", "-") for f in findings}))
+    # context-poisoned / config-drift can restate a finding kind; a tag list
+    # with the same entry twice reads like a bug to anyone opening the entity.
+    return list(dict.fromkeys(tags))
 
 
 def _aspects(asset: dict[str, Any]) -> list[Any]:
@@ -189,6 +195,7 @@ def _aspects(asset: dict[str, Any]) -> list[Any]:
             description=description,
             customProperties=_custom_properties(asset),
             externalUrl=asset.get("url") or None,
+            downstreamJobs=asset.get("downstream_jobs") or None,
         ),
         GlobalTagsClass(
             tags=[TagAssociationClass(tag=f"urn:li:tag:{tag}") for tag in _tags(asset)]

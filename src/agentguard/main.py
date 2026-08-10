@@ -15,7 +15,7 @@ from rich.table import Table
 from rich.text import Text
 
 from agentguard import __version__
-from agentguard.datahub.lineage import build_lineage
+from agentguard.datahub.lineage import attach_downstream_jobs, build_lineage
 from agentguard.datahub.skill import summarize
 from agentguard.datahub.writer import _disclosure_compliant, write_assets_to_datahub
 from agentguard.risk.narrative import annotate_narratives
@@ -45,6 +45,7 @@ OWASP_DESCRIPTIONS = {
     "LLM06": "Sensitive Information Disclosure — this asset can reach secrets, files, or databases.",
     "LLM08": "Excessive Agency — the toolset grants more capability than the task requires.",
     "MCP03": "Tool Poisoning — the tool definitions this server serves carry hidden instructions.",
+    "LLM03": "Supply Chain — the served tool surface no longer matches the approved configuration.",
 }
 
 console = Console()
@@ -143,8 +144,13 @@ def _fleet_health(assets: list[dict[str, Any]]) -> int:
     return round(100 - average)
 
 
-def _eu_ready(assets: list[dict[str, Any]]) -> int:
-    return sum(1 for asset in assets if _disclosure_compliant(asset) != "false")
+def _disclosure_unmet(assets: list[dict[str, Any]]) -> int:
+    """Assets with a human-facing channel and no declared disclosure (Art. 50).
+
+    Counting 'not_applicable' as compliant read as a readiness score, which let
+    a poisoned critical asset with no owner count as EU AI Act ready.
+    """
+    return sum(1 for asset in assets if _disclosure_compliant(asset) == "false")
 
 
 def _summary_panel(assets: list[dict[str, Any]], summary: dict[str, Any]) -> Panel:
@@ -152,8 +158,7 @@ def _summary_panel(assets: list[dict[str, Any]], summary: dict[str, Any]) -> Pan
     total = summary["total"]
     critical = tiers.get("critical", 0)
     high = tiers.get("high", 0)
-    ready = _eu_ready(assets)
-    ready_pct = round(ready / total * 100) if total else 100
+    unmet = _disclosure_unmet(assets)
     health = _fleet_health(assets)
 
     health_style = TIER_STYLES["low"] if health >= 75 else TIER_STYLES["medium"] if health >= 50 else TIER_STYLES["critical"]
@@ -165,7 +170,8 @@ def _summary_panel(assets: list[dict[str, Any]], summary: dict[str, Any]) -> Pan
     body.append("    ")
     body.append(f"{high} high", style=TIER_STYLES["high"] if high else "dim")
     body.append("    ")
-    body.append(f"EU AI Act ready {ready}/{total} ({ready_pct}%)")
+    body.append(f"{unmet} disclosure obligation{'' if unmet == 1 else 's'} unmet",
+                style=TIER_STYLES["high"] if unmet else "dim")
     body.append("    ")
     body.append("fleet health ")
     body.append(f"{health}/100", style=health_style)
@@ -233,6 +239,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.no_datahub:
         console.print("[yellow][DRY RUN] DataHub write-back skipped[/yellow]")
     else:
+        attach_downstream_jobs(assets)
         result = write_assets_to_datahub(assets, url=args.url, token=args.token)
         console.print(f"[dim]DataHub: {result['written']} written, {result['failed']} failed[/dim]")
         build_lineage(assets, url=args.url, token=args.token)

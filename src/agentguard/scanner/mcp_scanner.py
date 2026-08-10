@@ -257,6 +257,9 @@ def _from_configs() -> list[dict[str, Any]]:
             alive = _url_alive(url) if url else _command_alive(entry)
             declared = _entry_tools(entry)
             served = _live_tools(url) if url and alive else []
+            # A server we could not read is not a server we found clean. Without
+            # this the report shows no findings either way.
+            tools_unread = bool(url) and alive and not served
             if not alive:
                 supervision = "unreachable"
             elif url and _health_ok(url):
@@ -271,6 +274,7 @@ def _from_configs() -> list[dict[str, Any]]:
                     "tools": [tool["name"] for tool in served] or declared,
                     "tool_details": served,
                     "declared_tools": declared,
+                    "tool_definitions_unread": tools_unread,
                     "status": "ACTIVE" if supervision == "healthy" else "ORPHANED",
                     "supervision": supervision,
                     "discovered_via": "config",

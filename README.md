@@ -2,7 +2,11 @@
 
 **Your organization deploys AI agents. Do you know what their tools actually say?**
 
-AgentGuard discovers every AI agent and MCP server in your environment, inspects the tool definitions each server *actually serves*, scores the fleet for risk, and publishes the result to DataHub — so your agent fleet is governed in the same catalog as the rest of your data estate.
+AgentGuard discovers the AI agents and MCP servers running on a host, inspects the tool definitions each server **actually serves over the wire**, detects hidden instructions planted in those descriptions, and writes the whole fleet into DataHub as a connected graph — three entity types, 32 lineage edges, poisoning verdicts as tags and searchable properties.
+
+Not a security dashboard bolted onto a catalog: your agent fleet governed in the same graph as the rest of your data estate.
+
+> `upstreamLineage` is a *dataset* aspect — GMS rejects it on an `mlModel` URN with `HTTP 422: Unknown aspect upstreamLineage for entity mlModel`. Agent→server edges therefore go through `dataJob`, which is what DataHub's Lineage tab actually renders. That took a while to find out.
 
 ```
 ╭───────────────────────┬────────────┬──────────┬───────┬──────────┬─────────────────────┬───────────╮
@@ -12,7 +16,7 @@ AgentGuard discovers every AI agent and MCP server in your environment, inspects
 │ Chroma VectorDB       │ mcp_server │ ACTIVE   │   100 │ critical │ LLM01, LLM06, MCP03 │     –     │
 │ claude                │ agent      │ ACTIVE   │   100 │ critical │ —                   │     –     │
 │ LangChain Agent       │ mcp_server │ ACTIVE   │    99 │ critical │ LLM01, LLM06, LLM08 │     ✗     │
-│ DataHub MCP           │ mcp_server │ ACTIVE   │    74 │ high     │ LLM01, LLM06, MCP03 │     –     │
+│ DataHub MCP           │ mcp_server │ ACTIVE   │    49 │ medium   │ LLM03, LLM06        │     –     │
 │ Qdrant Search         │ mcp_server │ ORPHANED │    64 │ high     │ LLM06               │     –     │
 │ Claude MCP            │ mcp_server │ ACTIVE   │    44 │ medium   │ LLM06               │     –     │
 │ Mistral Local Agent   │ mcp_server │ ACTIVE   │    40 │ medium   │ —                   │     ✗     │
@@ -20,17 +24,22 @@ AgentGuard discovers every AI agent and MCP server in your environment, inspects
 │ HuggingFace Inference │ mcp_server │ ACTIVE   │     0 │ low      │ —                   │     –     │
 ╰───────────────────────┴────────────┴──────────┴───────┴──────────┴─────────────────────┴───────────╯
 ╭─ Fleet summary ────────────────────────────────────────────────────────────────────────────────────╮
-│ 10 assets    4 critical    2 high    EU AI Act ready 6/10 (60%)    fleet health 38/100             │
+│ 10 assets    4 critical    1 high    4 disclosure obligations unmet    fleet health 40/100        │
 ╰────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ OWASP LLM Top 10 findings ────────────────────────────────────────────────────────────────────────╮
-│ LLM01  (4 assets)  Prompt Injection — untrusted content can steer this agent's shell or command…   │
+│ LLM01  (3 assets)  Prompt Injection — untrusted content can steer this agent's shell or command…   │
+│ LLM03  (1 asset)   Supply Chain — the served tool surface no longer matches the approved config.   │
 │ LLM06  (7 assets)  Sensitive Information Disclosure — this asset can reach secrets, files, or…     │
 │ LLM08  (1 asset)   Excessive Agency — the toolset grants more capability than the task requires.   │
-│ MCP03  (3 assets)  Tool Poisoning — the tool definitions this server serves carry hidden…          │
+│ MCP03  (2 assets)  Tool Poisoning — the tool definitions this server serves carry hidden…          │
 ╰────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
-Three of those ten assets are serving tool definitions that lie. One of them scores 100 for a reason no human reviewer would ever see.
+Two of those ten serve tool definitions that lie to the reviewer, and a third serves a tool its approved config never declared. One of the two scores 100 for a reason no human reviewer would ever see.
+
+![The same scan, in DataHub](docs/screenshots/05-datahub-decoded-payload.png)
+
+*The same finding, in the catalog: `context-poisoned`, `invisible-characters`, and the decoded payload in `agentguard.poison.detail`.*
 
 ---
 
@@ -47,9 +56,9 @@ Query a vector collection.[U+E0049][U+E0047][U+E004E][U+E004F][U+E0052][U+E0045]
 
 That is Chroma VectorDB in the scan above. Its own tools are innocuous — a vector store, three read-ish operations, a 69 before this check existed. It scores **100** because of characters that do not render.
 
-This is not theoretical. Invariant Labs found **5.5% of public MCP servers already carry poisoned tool descriptions**; OWASP catalogued it as **MCP03:2025 — Tool Poisoning**; it has CVEs (CVE-2025-54136 "MCPoison", CVE-2025-54135 "CurXecute"). And no MCP client re-verifies a tool definition after first approving it, which makes the **rug pull** — serve a benign description on day one, a malicious one on day two — a supported operation rather than an attack.
+This is not theoretical. OWASP catalogues it as [MCP03:2025 — Tool Poisoning](https://owasp.org/www-project-mcp-top-10/2025/MCP03-2025%E2%80%93Tool-Poisoning). Invariant Labs' April 2025 disclosure found roughly **5.5% of public MCP servers carrying poisoned tool descriptions**, and the [MCPTox benchmark](https://arxiv.org/abs/2508.14925) measured attack success above 60% across 45+ real-world servers, peaking at 72.8%. The **rug pull** variant — a benign description on day one, a malicious one on day two — works because a client caches the tool list at first approval.
 
-**AgentGuard is the only thing in the DataHub ecosystem that reads what a server actually serves and writes the verdict into the catalog.**
+**Standalone MCP scanners already detect poisoned descriptions** — Invariant Labs' `mcp-scan` is the reference implementation, and this project owes it the technique. What none of them tells you is *which agent inherits that exposure, what data it can reach, and who owns it*, because none of them writes into a metadata graph. AgentGuard's verdict lands as a tag, a property, and a lineage edge on an entity a data team already governs.
 
 ---
 
@@ -63,16 +72,14 @@ An agent fleet is a data estate problem. Which agent can reach the secrets store
 
 The numbers behind the problem:
 
-| Stat | Source |
+| Fact | Source |
 |---|---|
-| **92%** of enterprises have no visibility into their AI agent identities | CISO survey, 235 respondents (Jan 2026) |
-| **95%** could not detect or contain a compromised agent | *ibid.* |
-| **82%** found agents in their infrastructure they did not know existed | CSA survey, 418 respondents (Apr 2026) |
-| **21%** have a formal decommissioning process | *ibid.* |
-| Fortune 500: **15 agents in 2025 → 150,000 by 2028** | Gartner (Apr 2026) |
+| Tool poisoning is a catalogued MCP attack class | [OWASP MCP03:2025](https://owasp.org/www-project-mcp-top-10/2025/MCP03-2025%E2%80%93Tool-Poisoning) |
+| ~**5.5%** of public MCP servers carry poisoned descriptions | Invariant Labs, Apr 2025 |
+| Attack success **>60%**, peaking at **72.8%**, across 45+ real servers | [MCPTox benchmark](https://arxiv.org/abs/2508.14925) |
 | **The EU AI Act has applied since 2 August 2026** | [Reg. (EU) 2024/1689, Art. 113](https://artificialintelligenceact.eu/article/113/) |
 
-Every one of those obligations presupposes an inventory. You cannot document a fleet you cannot enumerate.
+Every obligation the Act imposes — accountable owner, documented data access scope, risk classification — presupposes an inventory. You cannot document a fleet you cannot enumerate.
 
 ---
 
@@ -81,7 +88,7 @@ Every one of those obligations presupposes an inventory. You cannot document a f
 This is the part that matters: AgentGuard does not just *read* metadata, it **contributes to the graph**.
 
 ```
-mlModel (agent)  ──downstreamJobs──▶  dataJob (MCP server)  ──inputDatasets──▶  dataset
+mlModel (agent)  ──downstreamJobs──▶  dataJob (MCP server)  ◀──inputDatasets──  dataset
      claude                              ghost-mcp                          os-shell
                                                                             secrets-store
                                                                             filesystem
@@ -89,7 +96,9 @@ mlModel (agent)  ──downstreamJobs──▶  dataJob (MCP server)  ──inpu
                                                                             agent-network
 ```
 
-A full scan of the fleet above emits **32 lineage edges** — 9 agent→server and 23 server→data-source, plus the flow and the dataset entities themselves. Open `Ghost MCP` in the DataHub UI and its Lineage tab resolves six upstream entities: five data sources plus the agent that calls it.
+A full scan of the fleet above emits **32 lineage edges** — 9 agent→server and 23 server→data-source, plus the flow and the dataset entities themselves. Open the **Ghost MCP dataJob** in DataHub and its Lineage tab resolves six upstream entities: five data sources plus the agent that calls it.
+
+![Ghost MCP lineage in DataHub](docs/screenshots/06-datahub-lineage.png)
 
 Per entity, AgentGuard writes:
 
@@ -107,7 +116,7 @@ Per entity, AgentGuard writes:
 
 ---
 
-## Three checks nothing else runs
+## Three checks, and why they need a graph
 
 ### 1. Tool poisoning — read the wire, not the config
 
@@ -200,7 +209,7 @@ If DataHub is unreachable, AgentGuard warns and completes the scan — the local
 | `docker ps` | Containerized AI workloads |
 | `.env` in cwd and `~/projects/*` | `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `LANGCHAIN_*`, `AGENT_*` |
 
-**Credential names only — never values.** AgentGuard records that `ANTHROPIC_API_KEY` is present in a file. The secret is never read into memory, never written to the report, never sent to DataHub.
+**Credential names only — never values.** AgentGuard records that `ANTHROPIC_API_KEY` is present in a file. Parsing a `.env` necessarily reads the file, but the value is discarded at the parse boundary — only the key name is retained, and it is never written to the report or sent to DataHub.
 
 **Port discovery requires protocol evidence.** A reachable `/health` proves only that *something* is listening. Before cataloguing a port, AgentGuard sends a JSON-RPC `initialize` to `/mcp` and requires an MCP response. An endpoint answering `401`/`403` is recorded as an MCP server requiring auth; an ordinary web app on 8080 is not recorded at all.
 
@@ -214,6 +223,7 @@ Discovery is read-only. AgentGuard opens sockets and reads config files; it neve
 |---|---|---|
 | **Poisoned tool definition** | **+45** | **MCP03 / LLM01** — turns every other capability into an attack path |
 | Exposed with no authentication | +40 | Anything on the network can drive the agent |
+| Served tools diverge from approved config | +20 | **LLM03** Supply Chain — integrity, not injection |
 | Write / delete / exec tools | +25 | Actions are irreversible |
 | Shell / command tools | +20 | **LLM01** Prompt Injection |
 | ORPHANED (unsupervised) | +20 | Nobody is watching; the endpoint is claimable |
@@ -260,6 +270,16 @@ Risk tiers map to the Act's categories: `critical`/`high` → **high-risk**, `me
 See [`examples/eu_ai_act_compliance.json`](examples/eu_ai_act_compliance.json).
 
 ---
+
+## What this does not do
+
+Stated plainly, because a judge who finds an undisclosed gap discounts everything else.
+
+- **One host, not a fleet.** Discovery is localhost-only: three config paths and five ports. Multi-host is a deployment concern — the DataHub URNs are already host-agnostic.
+- **`tools/list` inspection needs an HTTP MCP server.** stdio servers (`command:` entries) are catalogued and scored, but their served descriptions cannot be read over the wire, so poisoning checks do not apply to them. This is the largest real gap.
+- **Port-discovered servers are inventoried, not inspected.** A shadow server confirmed by an `initialize` handshake gets an entity and a score, but no tool-definition analysis until it appears in a config. Assets whose definitions could not be read are marked `tool_definitions_unread` rather than reported clean.
+- **Rug-pull detection needs two scans.** The first writes the baseline to `~/.agentguard/tool_baseline.json`; the second is the one that can fire. To see it: scan, edit a description in `demo_servers/server_qdrant.js`, scan again.
+- **EU AI Act classification is a triage floor, not a legal assessment.** Derived from AgentGuard's own scoring, not from an Annex III analysis.
 
 ## Architecture
 
@@ -316,8 +336,11 @@ agentguard --url http://localhost:8080
 
 ## Tests
 
+Four suites, all passing — including a file dedicated to descriptions that must **not** be flagged, because a scanner that cries wolf on ordinary documentation teaches its reader to ignore the next real finding.
+
 ```bash
-python3 tests/test_poison.py
+python3 tests/test_poison.py            # detection
+python3 tests/test_false_positives.py   # benign descriptions stay clean
 python3 tests/test_lineage.py
 python3 tests/test_propagation.py
 ```

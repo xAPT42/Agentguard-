@@ -36,13 +36,16 @@ INVISIBLE_SINGLES = frozenset(
 TAG_BLOCK_START = 0xE0000
 TAG_BLOCK_END = 0xE007F
 
+# Every pattern here must target the *model's own instructions*. Imperative
+# usage guidance ("You must authenticate first") is recommended practice in
+# LLM-facing tool documentation, and "send a system message" is what a chat
+# tool does for a living - neither is evidence of hijacking.
 INSTRUCTION_OVERRIDE = (
     r"ignore\s+(all\s+)?(previous|prior|above)\s+instructions?",
     r"disregard\s+(all\s+)?(previous|prior|above)",
-    r"system\s+(directive|prompt|message|override)",
+    r"system\s+(directive|prompt|override)\b",
     r"new\s+instructions?\s*:",
     r"before\s+(completing|answering|doing)\s+any\s+task",
-    r"you\s+must\s+(always|first|never)",
     r"</?(system|instructions?)>",
 )
 
@@ -51,7 +54,9 @@ CONCEALMENT = (
     r"don'?t\s+(mention|tell|reveal|disclose|inform)",
     r"without\s+(telling|informing|notifying)",
     r"(mask|hide|conceal)\s+(this|it|the)",
-    r"silently",
+    # "Silently retries on timeout" is ordinary API documentation; the bare
+    # adverb is not a signal. Require something being withheld.
+    r"silently\s+(hide|omit|drop|discard|suppress|forward|send|exfiltrat)",
 )
 
 # High-signal artefacts: naming these in a tool description is not normal.
@@ -69,6 +74,15 @@ SENSITIVE_TERMS = (
     r"\bpasswords?\b",
     r"\bsecrets?\b",
 )
+# Naming a credential and naming a send verb are both normal - "Send an email
+# using the configured SMTP credentials" is a real description. What is not
+# normal is naming a destination to send it to.
+EXFIL_DESTINATIONS = (
+    r"https?://",
+    r"\bftp://",
+    r"\b\d{1,3}(\.\d{1,3}){3}\b",
+    r"\b[\w-]+\.(com|net|org|io|co|ru|cn|xyz|top)\b/?",
+)
 EXFIL_VERBS = (
     r"\bsend\b",
     r"\bpost\b",
@@ -79,6 +93,17 @@ EXFIL_VERBS = (
     r"\bleak\b",
     r"\bcurl\b",
 )
+
+# A hidden instruction and a config mismatch are different claims. Only the
+# first is tool poisoning; conflating them tags a server that hides nothing as
+# a prompt-injection carrier.
+POISONING_KINDS = frozenset({
+    "instruction_override",
+    "invisible_characters",
+    "credential_exfiltration",
+    "concealment",
+    "rug_pull",
+})
 
 SEVERITY = {
     "instruction_override": "critical",
@@ -188,8 +213,9 @@ def _scan_description(tool_name: str, description: str) -> list[dict[str, str]]:
     artefact = _matches(SENSITIVE_ARTEFACTS, haystack)
     term = _matches(SENSITIVE_TERMS, haystack)
     verb = _matches(EXFIL_VERBS, haystack)
-    if artefact or (term and verb):
-        target = artefact or f"{verb} … {term}"
+    destination = _matches(EXFIL_DESTINATIONS, haystack)
+    if artefact or (term and verb and destination):
+        target = artefact or f"{verb} … {term} -> {destination}"
         findings.append(
             {"tool": tool_name, "kind": "credential_exfiltration",
              "detail": f"description references credential material: {target!r}"}
@@ -251,8 +277,10 @@ def detect_poisoning(
     for finding in findings:
         finding["severity"] = SEVERITY.get(finding["kind"], "medium")
 
+    kinds = {finding["kind"] for finding in findings}
     return {
-        "poisoned": bool(findings),
+        "poisoned": bool(kinds & POISONING_KINDS),
+        "drifted": "config_drift" in kinds,
         "findings": findings,
         "tool_hashes": prints,
     }
