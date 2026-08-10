@@ -310,6 +310,49 @@
     padding:3px 9px; border-radius:4px; font-size:11px; font-weight:500;
     background:#F1F5F9; border:1px solid #E2E8F0; color:#475569;
   }
+
+  /* ---------- Live Threat Feed ---------- */
+  .feed { background:#0D1117; border:1px solid #7F1D1D; border-radius:8px;
+          height:220px; overflow:hidden; position:relative;
+          font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; }
+  .feed-inner { position:absolute; bottom:0; left:0; right:0; padding:10px 14px; }
+  .feed-line { padding:2px 0; color:#94A3B8; animation:feedIn .35s ease-out; white-space:nowrap;
+               overflow:hidden; text-overflow:ellipsis; }
+  @keyframes feedIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+  .feed-ts { color:#475569; }
+  .feed-sev { font-weight:700; }
+  .sev-CRITICAL { color:#F87171; } .sev-HIGH { color:#FB923C; }
+  .sev-MEDIUM { color:#FBBF24; }   .sev-INFO { color:#34D399; }
+
+  /* ---------- Poison marker ---------- */
+  .poison-badge { display:inline-flex; align-items:center; gap:4px; margin-left:6px;
+                  background:#7F1D1D; color:#FEE2E2; border-radius:4px;
+                  padding:1px 5px; font-size:10px; font-weight:700; letter-spacing:.3px; }
+  .narrative { background:#FFF7ED; border-left:3px solid #EA580C; border-radius:0 6px 6px 0;
+               padding:12px 14px; font-size:13px; line-height:1.55; color:#431407; }
+  .finding { border:1px solid #FECACA; background:#FEF2F2; border-radius:6px;
+             padding:9px 11px; margin-bottom:7px; font-size:12px; }
+  .finding-kind { font-weight:700; color:#991B1B; font-family:ui-monospace,monospace; }
+  .finding-detail { color:#7F1D1D; margin-top:3px; word-break:break-word; }
+  .amp { display:flex; align-items:baseline; gap:8px; font-size:13px; }
+  .amp-big { font-size:22px; font-weight:700; color:#DC2626; }
+
+  /* ---------- Demo Mode ---------- */
+  .demo-veil { position:fixed; inset:0; background:rgba(2,6,23,.55); z-index:70;
+               display:none; align-items:flex-end; justify-content:center; padding-bottom:48px; }
+  .demo-veil.show { display:flex; }
+  .demo-card { background:#0F172A; color:#E2E8F0; border-radius:12px; padding:18px 24px;
+               box-shadow:0 20px 50px rgba(0,0,0,.45); min-width:440px; text-align:center; }
+  .demo-step { font-size:11px; letter-spacing:1.4px; color:#64748B; text-transform:uppercase; }
+  .demo-msg { font-size:16px; font-weight:600; margin-top:6px; }
+  .demo-bar { height:3px; background:#1E293B; border-radius:2px; margin-top:14px; overflow:hidden; }
+  .demo-fill { height:100%; background:#6366F1; width:0; transition:width .4s ease; }
+  .demo-exit { margin-top:14px; background:none; border:1px solid #334155; color:#94A3B8;
+               border-radius:6px; padding:5px 12px; font-size:12px; cursor:pointer; }
+  .demo-exit:hover { color:#E2E8F0; border-color:#64748B; }
+  .confetti { position:fixed; top:-12px; width:9px; height:9px; z-index:80;
+              pointer-events:none; animation:fall linear forwards; }
+  @keyframes fall { to { transform:translateY(105vh) rotate(760deg); opacity:0; } }
 </style>
 </head>
 <body>
@@ -360,6 +403,7 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Export JSON
         </button>
+        <button class="btn btn-ghost" id="btn-demo">▶ Demo Mode</button>
         <button class="btn btn-ghost" id="btn-report">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
           Compliance Report
@@ -410,6 +454,13 @@
       </section>
 
       <!-- Blast Radius -->
+      <div class="card" id="feed-card" style="margin-top:20px">
+        <div class="card-head">
+          <div class="card-title">Live Threat Feed</div>
+          <div class="card-sub" id="feed-sub">streaming from the current scan</div>
+        </div>
+        <div class="feed"><div class="feed-inner" id="feed-inner"></div></div>
+      </div>
       <div class="card" id="blast-card" style="margin-top:20px">
         <div class="card-head">
           <div class="card-title">Blast Radius — Agent to Data Lineage</div>
@@ -535,6 +586,14 @@
 </div>
 
 <div class="overlay" id="overlay"></div>
+<div class="demo-veil" id="demo-veil">
+  <div class="demo-card">
+    <div class="demo-step" id="demo-step">Step 1 / 5</div>
+    <div class="demo-msg" id="demo-msg"></div>
+    <div class="demo-bar"><div class="demo-fill" id="demo-fill"></div></div>
+    <button class="demo-exit" id="demo-exit">✕ Exit demo</button>
+  </div>
+</div>
 <aside class="drawer" id="drawer">
   <div class="drawer-head">
     <span id="drawer-logo-slot"></span>
@@ -865,7 +924,9 @@ function renderFleet() {
   body.innerHTML = list.map(a => {
     const color = TIER_COLOR[a.risk_tier] || "#94A3B8";
     return `<tr class="asset-row" data-name="${esc(a.name)}">
-      <td><span class="asset-name">${logoHTML(a, 20)}${esc(a.name)}</span></td>
+      <td><span class="asset-name">${logoHTML(a, 20)}${esc(a.name)}${
+        a.poison && a.poison.poisoned ? '<span class="poison-badge" title="Poisoned tool definition">\u2623 POISONED</span>' : ""
+      }</span></td>
       <td><span class="type-chip">${logoHTML(a, 14)}${esc(a.type)}</span></td>
       <td><span class="pill pill-${esc(a.status)}">${esc(a.status)}</span></td>
       <td><div class="bar-wrap">
@@ -1167,6 +1228,9 @@ function openDrawer(name) {
   const drift = notes.length ? `<div class="drift-note">${notes.join(" ")}</div>` : "";
 
   document.getElementById("drawer-body").innerHTML = `
+    ${narrativeHTML(a)}
+    ${poisonHTML(a)}
+    ${propagationHTML(a)}
     <div class="sec"><h4>Asset info</h4>${info}</div>
     <div class="sec"><h4>Risk breakdown — ${a.risk_score}/100</h4>${bars}${drift}</div>
     <div class="sec"><h4>Tools</h4><div class="chips">${toolChips}</div></div>
@@ -1180,6 +1244,175 @@ function openDrawer(name) {
   document.getElementById("drawer").classList.add("show");
   document.getElementById("overlay").classList.add("show");
 }
+
+/* ============================================================
+   Live Threat Feed — every line is derived from the loaded scan,
+   so nothing here claims a finding the scanner did not produce.
+   ============================================================ */
+let FEED_TIMER = null;
+
+function feedEvents(assets) {
+  const out = [];
+  assets.forEach(a => {
+    const findings = (a.poison && a.poison.findings) || [];
+    findings.forEach(f => out.push({
+      sev: (f.severity || "high").toUpperCase(),
+      msg: `${f.kind.replace(/_/g, " ")} detected on ${a.name}${f.tool && f.tool !== "-" ? " · " + f.tool : ""}`
+    }));
+    if (a.status === "ORPHANED")
+      out.push({ sev: "HIGH", msg: `${a.name} is unsupervised — ${a.supervision || "no health endpoint"}` });
+    if (a.risk_tier === "critical")
+      out.push({ sev: "CRITICAL", msg: `${a.name} scored ${a.risk_score}/100 — critical tier` });
+    (a.owasp_tags || []).forEach(t =>
+      out.push({ sev: "MEDIUM", msg: `${t} flag raised on ${a.name}` }));
+    const p = a.propagation || {};
+    if (p.amplification > 0)
+      out.push({ sev: "CRITICAL", msg: `${a.name} blast radius amplified to ${p.effective_data_sources.length} data sources` });
+    if (p.poisoned_upstream)
+      out.push({ sev: "CRITICAL", msg: `${a.name} inherits risk from a poisoned upstream server` });
+    out.push({ sev: "INFO", msg: `DataHub write-back: ${a.name} → 1 entity updated` });
+  });
+  return out;
+}
+
+function renderThreatFeed(assets) {
+  const inner = document.getElementById("feed-inner");
+  if (!inner) return;
+  if (FEED_TIMER) { clearInterval(FEED_TIMER); FEED_TIMER = null; }
+  inner.innerHTML = "";
+
+  const events = feedEvents(assets);
+  const sub = document.getElementById("feed-sub");
+  if (!events.length) {
+    inner.innerHTML = '<div class="feed-line">No findings in the current scan.</div>';
+    if (sub) sub.textContent = "nothing to report";
+    return;
+  }
+  if (sub) sub.textContent = events.length + " findings cycling from the current scan";
+
+  let i = 0;
+  const push = () => {
+    const e = events[i % events.length];
+    i++;
+    const ts = new Date().toLocaleTimeString("en-GB");
+    const line = document.createElement("div");
+    line.className = "feed-line";
+    line.innerHTML = `<span class="feed-ts">[${ts}]</span> <span class="feed-sev sev-${e.sev}">${e.sev}</span> ${esc(e.msg)}`;
+    inner.appendChild(line);
+    while (inner.children.length > 14) inner.removeChild(inner.firstChild);
+  };
+  push(); push(); push();
+  FEED_TIMER = setInterval(push, 3200);
+}
+
+/* ---------- New drawer sections ---------- */
+function narrativeHTML(a) {
+  if (!a.threat_narrative) return "";
+  const src = a.narrative_source === "claude" ? "generated by Claude" : "composed from scan facts";
+  return `<div class="sec"><h4>Threat narrative <span class="card-sub">— ${src}</span></h4>
+    <div class="narrative">${esc(a.threat_narrative)}</div></div>`;
+}
+
+function poisonHTML(a) {
+  const findings = (a.poison && a.poison.findings) || [];
+  if (!findings.length) return "";
+  return `<div class="sec"><h4>☣ Tool poisoning — ${findings.length} finding${findings.length > 1 ? "s" : ""}</h4>` +
+    findings.map(f => `<div class="finding">
+      <span class="finding-kind">${esc(f.kind)}</span>
+      ${f.tool && f.tool !== "-" ? ' · <span class="card-sub">' + esc(f.tool) + "</span>" : ""}
+      <div class="finding-detail">${esc(f.detail)}</div></div>`).join("") + "</div>";
+}
+
+function propagationHTML(a) {
+  const p = a.propagation || {};
+  if (a.type === "agent") {
+    if (!(p.inherited_from || []).length) return "";
+    return `<div class="sec"><h4>Inherited risk</h4>
+      <div class="amp"><span class="amp-big">${p.inherited_score}</span>
+      <span>inherited from ${esc(p.inherited_from.join(", "))}${p.poisoned_upstream ? " — serving a poisoned tool definition" : ""}</span></div></div>`;
+  }
+  if (!p.spawns_agents || !(p.amplification > 0)) return "";
+  return `<div class="sec"><h4>Risk propagation</h4>
+    <div class="amp"><span class="amp-big">${p.direct_data_sources.length} → ${p.effective_data_sources.length}</span>
+    <span>data sources, because a spawned child inherits the calling agent's configuration</span></div>
+    <div class="chips" style="margin-top:8px">${p.effective_data_sources.map(s => '<span class="chip">' + esc(s) + "</span>").join("")}</div></div>`;
+}
+
+/* ============================================================
+   Demo Mode — a scripted pass over the real data, for filming.
+   ============================================================ */
+let DEMO_ON = false;
+
+function confetti() {
+  const colors = ["#DC2626", "#EA580C", "#D97706", "#16A34A", "#6366F1"];
+  for (let i = 0; i < 90; i++) {
+    const c = document.createElement("div");
+    c.className = "confetti";
+    c.style.left = Math.random() * 100 + "vw";
+    c.style.background = colors[i % colors.length];
+    c.style.animationDuration = (2 + Math.random() * 1.6) + "s";
+    c.style.animationDelay = (Math.random() * 0.5) + "s";
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 4200);
+  }
+}
+
+function demoSay(step, msg) {
+  document.getElementById("demo-step").textContent = `Step ${step} / 5`;
+  document.getElementById("demo-msg").textContent = msg;
+  document.getElementById("demo-fill").style.width = (step / 5 * 100) + "%";
+}
+
+function exitDemo() {
+  DEMO_ON = false;
+  document.getElementById("demo-veil").classList.remove("show");
+  closeDrawer();
+}
+
+async function runDemo() {
+  if (DEMO_ON || !DATA) return;
+  DEMO_ON = true;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const veil = document.getElementById("demo-veil");
+  veil.classList.add("show");
+
+  const assets = DATA.assets || [];
+  const worst = assets.slice().sort((a, b) => (b.risk_score || 0) - (a.risk_score || 0))[0];
+  const poisoned = assets.filter(a => a.poison && a.poison.poisoned);
+  const crit = assets.filter(a => a.risk_tier === "critical");
+
+  try {
+    demoSay(1, `Scanning ${assets.length} assets across the fleet…`);
+    showView("fleet");
+    await wait(2600);
+    if (!DEMO_ON) return;
+
+    demoSay(2, `${crit.length} critical, ${assets.filter(a => a.status === "ORPHANED").length} unsupervised`);
+    document.getElementById("defcon-bar").scrollIntoView({ behavior: "smooth", block: "center" });
+    await wait(2600);
+    if (!DEMO_ON) return;
+
+    demoSay(3, poisoned.length
+      ? `${poisoned.length} servers serve poisoned tool definitions`
+      : "No poisoned tool definitions found");
+    if (poisoned.length) openDrawer(poisoned[0].name);
+    await wait(3200);
+    if (!DEMO_ON) return;
+
+    demoSay(4, worst ? `${worst.name} — ${worst.risk_score}/100` : "Reviewing the worst asset");
+    if (worst) openDrawer(worst.name);
+    await wait(3200);
+    if (!DEMO_ON) return;
+
+    closeDrawer();
+    demoSay(5, `${assets.length} assets inventoried, ${crit.length} critical, all written to DataHub`);
+    confetti();
+    await wait(3600);
+  } finally {
+    if (DEMO_ON) exitDemo();
+  }
+}
+
 function closeDrawer() {
   document.getElementById("drawer").classList.remove("show");
   document.getElementById("overlay").classList.remove("show");
@@ -1449,6 +1682,7 @@ function render(data, note) {
   renderBadges(assets);
   renderDefcon(assets);
   renderBlastRadius(assets);
+  renderThreatFeed(assets);
   if (VIEW === "risk") renderDimChart();
   document.getElementById("last-scan").textContent = new Date().toLocaleString();
   const banner = document.getElementById("banner");
@@ -1743,6 +1977,8 @@ function exportReport() {
   URL.revokeObjectURL(url);
 }
 
+document.getElementById("btn-demo").addEventListener("click", runDemo);
+document.getElementById("demo-exit").addEventListener("click", exitDemo);
 document.getElementById("btn-report").addEventListener("click", exportReport);
 
 </script>
