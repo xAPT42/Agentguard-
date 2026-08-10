@@ -125,4 +125,4 @@ All 10 assets, plus:
 - Inherited-risk and blast-radius amplification properties
 - EU AI Act fields on every entity
 
-The Regulation became applicable on **2 August 2026 — eight days before this scan**. Six of these ten assets classify as high-risk, and none has an accountable owner registered.
+The Regulation became applicable on **2 August 2026 — eight days before this scan** ([Art. 113](https://artificialintelligenceact.eu/article/113/)). Six of these ten assets classify as high-risk, and none has an accountable owner registered.

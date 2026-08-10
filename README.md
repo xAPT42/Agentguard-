@@ -70,7 +70,7 @@ The numbers behind the problem:
 | **82%** found agents in their infrastructure they did not know existed | CSA survey, 418 respondents (Apr 2026) |
 | **21%** have a formal decommissioning process | *ibid.* |
 | Fortune 500: **15 agents in 2025 → 150,000 by 2028** | Gartner (Apr 2026) |
-| **The EU AI Act applies from 2 August 2026** | Regulation 2024/1689 |
+| **The EU AI Act has applied since 2 August 2026** | [Reg. (EU) 2024/1689, Art. 113](https://artificialintelligenceact.eu/article/113/) |
 
 Every one of those obligations presupposes an inventory. You cannot document a fleet you cannot enumerate.
 
@@ -242,7 +242,10 @@ Findings are tagged against the **OWASP LLM Top 10**, plus **MCP03:2025** for to
 
 ## EU AI Act
 
-The Act applies from **2 August 2026**. AgentGuard writes the fields its obligations depend on onto each DataHub entity:
+[Article 113](https://artificialintelligenceact.eu/article/113/) of
+[Regulation (EU) 2024/1689](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32024R1689):
+*"It shall apply from 2 August 2026."* That date has passed. AgentGuard writes the fields its
+obligations depend on onto each DataHub entity:
 
 | Property | Maps to |
 |---|---|
