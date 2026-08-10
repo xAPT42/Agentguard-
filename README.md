@@ -196,6 +196,12 @@ If DataHub is unreachable, AgentGuard warns and completes the scan — the local
 
 `dashboard/index.html` is a self-contained page (no build step) that reads `examples/scan_output.json`: fleet table with poisoning markers, risk distribution, an SVG blast-radius graph, a live threat feed driven by the current scan, OWASP and EU AI Act views, and a **Demo Mode** that walks the real data in five scripted steps.
 
+![AgentGuard dashboard](docs/screenshots/01-fleet-overview.png)
+
+Opening a poisoned asset shows the decoded payload, the findings behind the score, and the blast-radius amplification:
+
+![Asset detail with the decoded payload](docs/screenshots/02-poisoned-invisible.png)
+
 ---
 
 ## What gets discovered
