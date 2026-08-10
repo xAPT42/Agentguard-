@@ -42,11 +42,11 @@ STATUS_STYLES = {
 }
 
 OWASP_DESCRIPTIONS = {
-    "LLM01": "Prompt Injection — untrusted content can steer this agent's shell or command tools.",
-    "LLM02": "Sensitive Information Disclosure — this asset can reach secrets, files, or databases.",
-    "LLM03": "Excessive Agency — the toolset grants more capability than the task requires.",
-    "MCP03": "Tool Poisoning — the tool definitions this server serves carry hidden instructions.",
-    "LLM04": "Supply Chain — the served tool surface no longer matches the approved configuration.",
+    "LLM01": "Prompt Injection: untrusted content can steer this agent's shell or command tools.",
+    "LLM02": "Sensitive Information Disclosure: this asset can reach secrets, files, or databases.",
+    "LLM03": "Excessive Agency: the toolset grants more capability than the task requires.",
+    "MCP03": "Tool Poisoning: the tool definitions this server serves carry hidden instructions.",
+    "LLM04": "Supply Chain: the served tool surface no longer matches the approved configuration.",
 }
 
 console = Console()
@@ -109,7 +109,7 @@ def _disclosure_cell(asset: dict[str, Any]) -> Text:
         return Text("✓", style="green")
     if value == "false":
         return Text("✗", style="red")
-    return Text("–", style="dim")
+    return Text("-", style="dim")
 
 
 def _results_table(assets: list[dict[str, Any]]) -> Table:
@@ -133,7 +133,7 @@ def _results_table(assets: list[dict[str, Any]]) -> Table:
             Text(status, style=STATUS_STYLES.get(status, "white")),
             Text(str(asset.get("risk_score", 0)), style=tier_style),
             Text(tier, style=tier_style),
-            ", ".join(asset.get("owasp_tags") or []) or "—",
+            ", ".join(asset.get("owasp_tags") or []) or "-",
             _disclosure_cell(asset),
         )
     return table

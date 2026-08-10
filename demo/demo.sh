@@ -13,16 +13,16 @@ warn() { printf '\033[1;33mWARN: %s\033[0m\n' "$1"; }
 fail() { printf '\033[1;31mERROR: %s\033[0m\n' "$1" >&2; exit 1; }
 
 command -v docker >/dev/null 2>&1 || fail "docker is required but not installed"
-docker info >/dev/null 2>&1 || fail "the docker daemon is not reachable — start Docker first"
-command -v datahub >/dev/null 2>&1 || fail "datahub CLI not found — run: pip install acryl-datahub"
-command -v agentguard >/dev/null 2>&1 || fail "agentguard not on PATH — run: pip install -e ."
+docker info >/dev/null 2>&1 || fail "the docker daemon is not reachable, start Docker first"
+command -v datahub >/dev/null 2>&1 || fail "datahub CLI not found, run: pip install acryl-datahub"
+command -v agentguard >/dev/null 2>&1 || fail "agentguard not on PATH, run: pip install -e ."
 
 wait_for() {
   local url="$1" name="$2" elapsed=0
   info "Waiting for $name at $url (up to ${WAIT_TIMEOUT}s)"
   while ! curl -sf -o /dev/null "$url"; do
     if [ "$elapsed" -ge "$WAIT_TIMEOUT" ]; then
-      fail "$name did not come up within ${WAIT_TIMEOUT}s — check: docker logs datahub-datahub-gms-quickstart-1"
+      fail "$name did not come up within ${WAIT_TIMEOUT}s, check: docker logs datahub-datahub-gms-quickstart-1"
     fi
     sleep 5
     elapsed=$((elapsed + 5))
@@ -66,7 +66,7 @@ cat <<EOF
 EOF
 
 if [ "$SCAN_EXIT" -eq 1 ]; then
-  warn "Critical assets were found — agentguard exited 1 (this is the CI gate working)."
+  warn "Critical assets were found, agentguard exited 1 (this is the CI gate working)."
 else
   info "No critical assets found."
 fi

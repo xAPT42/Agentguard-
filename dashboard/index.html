@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AgentGuard — AI Agent Fleet Governance</title>
+<title>AgentGuard, AI Agent Fleet Governance</title>
 <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   :root {
@@ -383,7 +383,7 @@
     </ul>
     <div class="sidebar-footer">
       <div class="label">Last scan</div>
-      <div class="value" id="last-scan">—</div>
+      <div class="value" id="last-scan">-</div>
     </div>
   </aside>
 
@@ -463,7 +463,7 @@
       </div>
       <div class="card" id="blast-card" style="margin-top:20px">
         <div class="card-head">
-          <div class="card-title">Blast Radius — Agent to Data Lineage</div>
+          <div class="card-title">Blast Radius, Agent to Data Lineage</div>
           <div class="card-sub">Which agents can reach which data sources based on declared tools</div>
         </div>
         <div class="blast-graph" id="blast-graph"></div>
@@ -507,7 +507,7 @@
           <div id="owasp-full"></div>
           <div class="footnote">
             Categories follow the OWASP LLM Top 10 (2023 list), matching the tags emitted by the scorer.
-            Greyed rows are categories AgentGuard does not currently detect — absence of a finding is not evidence of absence.
+            Greyed rows are categories AgentGuard does not currently detect, absence of a finding is not evidence of absence.
           </div>
         </div>
       </section>
@@ -576,7 +576,7 @@
             </div>
           </div>
           <div class="footnote">
-            These settings are held in this browser only — the page has no backend, so they do not reconfigure the CLI.
+            These settings are held in this browser only, the page has no backend, so they do not reconfigure the CLI.
             Pass <code>--url</code> and <code>--token</code> to <code>agentguard</code>, or export <code>DATAHUB_URL</code> / <code>DATAHUB_TOKEN</code>.
           </div>
         </div>
@@ -613,7 +613,7 @@
     <span class="term-dot" style="background:#ef4444"></span>
     <span class="term-dot" style="background:#eab308"></span>
     <span class="term-dot" style="background:#22c55e"></span>
-    <span style="margin-left:8px">agentguard — scan</span>
+    <span style="margin-left:8px">agentguard, scan</span>
   </div>
   <div class="term" id="term"></div>
 </div>
@@ -658,7 +658,7 @@ const FILTER_COLOR = { critical: "#ef4444", high: "#f97316", medium: "#eab308", 
 const TIER_ORDER = ["critical", "high", "medium", "low"];
 const HUMAN_CHANNEL = ["email","mail","chat","message","notify","reply","comment","sms","slack","publish","respond"];
 
-/* Scorer constants — mirror of agentguard/risk/scorer.py */
+/* Scorer constants, mirror of agentguard/risk/scorer.py */
 const P = { NO_AUTH: 40, MUTATING: 25, SHELL: 20, ORPHANED: 20, SPRAWL: 10, UNKNOWN: 10, CREDENTIAL: 10, READ: 4 };
 const MUTATING_KW = ["write","delete","exec","create","update","drop","remove","put","post"];
 const SHELL_KW = ["shell","cmd","command","bash","terminal","subprocess"];
@@ -763,7 +763,7 @@ const LOGOS = [
   { keys: ["github"], src: "https://cdn.simpleicons.org/github/ffffff", dark: true },
   { keys: ["redis"], src: "https://cdn.simpleicons.org/redis/FF4438" }
 ];
-/* Known vendors with no exploitable mark — shield, no network request. */
+/* Known vendors with no exploitable mark, shield, no network request. */
 const LOGO_SHIELD = ["mistral", "ollama", "chroma", "qdrant"];
 
 function getLogo(name) {
@@ -962,7 +962,7 @@ function chartMessage(canvasId, show) {
     if (!msg) {
       msg = document.createElement("div");
       msg.className = "chart-msg empty";
-      msg.textContent = "Chart library unavailable — the data is in the tables.";
+      msg.textContent = "Chart library unavailable, the data is in the tables.";
       parent.appendChild(msg);
     }
     c.style.display = "none";
@@ -1078,9 +1078,9 @@ function renderEU(assets) {
   const na50 = assets.filter(a => disclosure(a) === "not_applicable").length;
   const fail50 = assets.filter(a => disclosure(a) === "false").length;
   const cards = [
-    { t: "Art. 9 — Risk management", v: pass9 + "/" + assets.length, n: "assets below the high tier", c: pass9 === assets.length ? TIER_COLOR.low : TIER_COLOR.high },
-    { t: "Art. 13 — Information for deployers", v: pass13 + "/" + assets.length, n: "assets with a documented toolset", c: pass13 === assets.length ? TIER_COLOR.low : TIER_COLOR.high },
-    { t: "Art. 50 — Transparency", v: fail50 + " unmet", n: na50 + " not applicable · " + (assets.length - na50 - fail50) + " declared", c: fail50 ? TIER_COLOR.critical : TIER_COLOR.low }
+    { t: "Art. 9, Risk management", v: pass9 + "/" + assets.length, n: "assets below the high tier", c: pass9 === assets.length ? TIER_COLOR.low : TIER_COLOR.high },
+    { t: "Art. 13, Information for deployers", v: pass13 + "/" + assets.length, n: "assets with a documented toolset", c: pass13 === assets.length ? TIER_COLOR.low : TIER_COLOR.high },
+    { t: "Art. 50, Transparency", v: fail50 + " unmet", n: na50 + " not applicable · " + (assets.length - na50 - fail50) + " declared", c: fail50 ? TIER_COLOR.critical : TIER_COLOR.low }
   ];
   document.getElementById("eu-cards").innerHTML = cards.map(c => `
     <div class="kpi">
@@ -1092,7 +1092,7 @@ function renderEU(assets) {
   const mark = ok => ok
     ? '<span class="ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>'
     : '<span class="bad"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>';
-  const dash = '<span class="na">—</span>';
+  const dash = '<span class="na">-</span>';
   document.getElementById("eu-body").innerHTML = assets.map(a => {
     const d = disclosure(a);
     return `<tr>
@@ -1143,7 +1143,7 @@ function lineageChain(asset) {
   };
   const self = { label: asset.name, self: true };
 
-  /* A vector store terminates at its own collection — two nodes is the whole story. */
+  /* A vector store terminates at its own collection, two nodes is the whole story. */
   if (asset.type === "vector_store") {
     const collection = tools(asset).some(t => t.includes("collection")) ? "Collection" : "Index";
     return [self, { label: collection }];
@@ -1208,9 +1208,9 @@ function openDrawer(name) {
   const dis = disclosure(a);
   const m = ok => ok ? '<span class="ok">✓</span>' : '<span class="bad">✗</span>';
   const eu = [
-    kv("Art. 9 — risk management", "") .replace("<span></span>", m(art9(a))),
-    kv("Art. 13 — information", "").replace("<span></span>", m(art13(a))),
-    kv("Art. 50 — transparency", "").replace("<span></span>", dis === "not_applicable" ? '<span class="na">–</span>' : m(dis === "true")),
+    kv("Art. 9, risk management", "") .replace("<span></span>", m(art9(a))),
+    kv("Art. 13, information", "").replace("<span></span>", m(art13(a))),
+    kv("Art. 50, transparency", "").replace("<span></span>", dis === "not_applicable" ? '<span class="na">-</span>' : m(dis === "true")),
     kv("disclosure", dis),
     kv("risk category", riskCategory(a.risk_tier)),
     kv("owner", OWNERS[a.name] || "unassigned")
@@ -1219,7 +1219,7 @@ function openDrawer(name) {
   const tags = (a.owasp_tags || []).length
     ? (a.owasp_tags || []).map(t => {
         const o = OWASP_ALL.find(x => x.code === t) || { desc: "" };
-        return `<span class="owasp-badge" style="background:${OWASP_COLOR[t] || "#64748B"}" title="${esc(o.name + " — " + o.desc)}">${esc(t)}</span>`;
+        return `<span class="owasp-badge" style="background:${OWASP_COLOR[t] || "#64748B"}" title="${esc(o.name + ", " + o.desc)}">${esc(t)}</span>`;
       }).join("")
     : '<span class="card-sub">None triggered</span>';
 
@@ -1234,9 +1234,9 @@ function openDrawer(name) {
   if (d.raw !== a.risk_score && inherited === a.risk_score)
     /* Not a mismatch: the score came from what this asset is connected to,
        which no per-asset breakdown can show. */
-    notes.push(`This asset's own fields produce <strong>${d.raw}</strong>. It reports <strong>${a.risk_score}</strong> because it inherits from ${esc((a.propagation.inherited_from || []).join(", "))} — see Inherited risk above.`);
+    notes.push(`This asset's own fields produce <strong>${d.raw}</strong>. It reports <strong>${a.risk_score}</strong> because it inherits from ${esc((a.propagation.inherited_from || []).join(", "))}, see Inherited risk above.`);
   else if (d.raw !== a.risk_score)
-    notes.push(`Reported score <strong>${a.risk_score}</strong> differs from the <strong>${d.raw}</strong> these fields produce — this asset's score did not come from the current scorer.`);
+    notes.push(`Reported score <strong>${a.risk_score}</strong> differs from the <strong>${d.raw}</strong> these fields produce, this asset's score did not come from the current scorer.`);
   else if (d.total !== d.raw)
     notes.push(`These dimensions sum to <strong>${d.total}</strong>; the score is capped at <strong>${d.raw}</strong>.`);
   const drift = notes.length ? `<div class="drift-note">${notes.join(" ")}</div>` : "";
@@ -1246,7 +1246,7 @@ function openDrawer(name) {
     ${poisonHTML(a)}
     ${propagationHTML(a)}
     <div class="sec"><h4>Asset info</h4>${info}</div>
-    <div class="sec"><h4>Risk breakdown — ${a.risk_score}/100</h4>${bars}${drift}</div>
+    <div class="sec"><h4>Risk breakdown, ${a.risk_score}/100</h4>${bars}${drift}</div>
     <div class="sec"><h4>Tools</h4><div class="chips">${toolChips}</div></div>
     ${keys}
     <div class="sec"><h4>🇪🇺 EU AI Act</h4>${eu}</div>
@@ -1260,7 +1260,7 @@ function openDrawer(name) {
 }
 
 /* ============================================================
-   Live Threat Feed — every line is derived from the loaded scan,
+   Live Threat Feed, every line is derived from the loaded scan,
    so nothing here claims a finding the scanner did not produce.
    ============================================================ */
 let FEED_TIMER = null;
@@ -1274,9 +1274,9 @@ function feedEvents(assets) {
       msg: `${f.kind.replace(/_/g, " ")} detected on ${a.name}${f.tool && f.tool !== "-" ? " · " + f.tool : ""}`
     }));
     if (a.status === "ORPHANED")
-      out.push({ sev: "HIGH", msg: `${a.name} is unsupervised — ${a.supervision || "no health endpoint"}` });
+      out.push({ sev: "HIGH", msg: `${a.name} is unsupervised, ${a.supervision || "no health endpoint"}` });
     if (a.risk_tier === "critical")
-      out.push({ sev: "CRITICAL", msg: `${a.name} scored ${a.risk_score}/100 — critical tier` });
+      out.push({ sev: "CRITICAL", msg: `${a.name} scored ${a.risk_score}/100, critical tier` });
     (a.owasp_tags || []).forEach(t =>
       out.push({ sev: "MEDIUM", msg: `${t} flag raised on ${a.name}` }));
     const p = a.propagation || {};
@@ -1323,14 +1323,14 @@ function renderThreatFeed(assets) {
 function narrativeHTML(a) {
   if (!a.threat_narrative) return "";
   const src = a.narrative_source === "claude" ? "generated by Claude" : "composed from scan facts";
-  return `<div class="sec"><h4>Threat narrative <span class="card-sub">— ${src}</span></h4>
+  return `<div class="sec"><h4>Threat narrative <span class="card-sub">- ${src}</span></h4>
     <div class="narrative">${esc(a.threat_narrative)}</div></div>`;
 }
 
 function poisonHTML(a) {
   const findings = (a.poison && a.poison.findings) || [];
   if (!findings.length) return "";
-  return `<div class="sec"><h4>☣ Tool poisoning — ${findings.length} finding${findings.length > 1 ? "s" : ""}</h4>` +
+  return `<div class="sec"><h4>☣ Tool poisoning, ${findings.length} finding${findings.length > 1 ? "s" : ""}</h4>` +
     findings.map(f => `<div class="finding">
       <span class="finding-kind">${esc(f.kind)}</span>
       ${f.tool && f.tool !== "-" ? ' · <span class="card-sub">' + esc(f.tool) + "</span>" : ""}
@@ -1343,7 +1343,7 @@ function propagationHTML(a) {
     if (!(p.inherited_from || []).length) return "";
     return `<div class="sec"><h4>Inherited risk</h4>
       <div class="amp"><span class="amp-big">${p.inherited_score}</span>
-      <span>inherited from ${esc(p.inherited_from.join(", "))}${p.poisoned_upstream ? " — serving a poisoned tool definition" : ""}</span></div></div>`;
+      <span>inherited from ${esc(p.inherited_from.join(", "))}${p.poisoned_upstream ? ", serving a poisoned tool definition" : ""}</span></div></div>`;
   }
   if (!p.spawns_agents || !(p.amplification > 0)) return "";
   return `<div class="sec"><h4>Risk propagation</h4>
@@ -1353,7 +1353,7 @@ function propagationHTML(a) {
 }
 
 /* ============================================================
-   Demo Mode — a scripted pass over the real data, for filming.
+   Demo Mode, a scripted pass over the real data, for filming.
    ============================================================ */
 let DEMO_ON = false;
 
@@ -1413,7 +1413,7 @@ async function runDemo() {
     await wait(3200);
     if (!DEMO_ON) return;
 
-    demoSay(4, worst ? `${worst.name} — ${worst.risk_score}/100` : "Reviewing the worst asset");
+    demoSay(4, worst ? `${worst.name}, ${worst.risk_score}/100` : "Reviewing the worst asset");
     if (worst) openDrawer(worst.name);
     await wait(3200);
     if (!DEMO_ON) return;
@@ -1436,7 +1436,7 @@ function closeDrawer() {
    Scan modal
    ============================================================ */
 const SCAN_LINES = [
-  "[00:00] AgentGuard v1.0.0 — starting scan",
+  "[00:00] AgentGuard v1.0.0, starting scan",
   "[00:01] Loading config: ~/.claude/settings.json ✓",
   "[00:02] Probing MCP files: .mcp.json, .cursorrules...",
   "[00:03] Port scan: 3000, 5000, 8000, 8080, 8888...",
@@ -1446,12 +1446,12 @@ const SCAN_LINES = [
   '[00:07] Process scan: ps aux | grep -E "langchain|agent|claude"',
   "[00:08] Detected: LangChain agent (pid 4821, 14 tools) ⚠ high risk|warn",
   "[00:09] Detected: Claude MCP server (pid 3901, 6 tools)",
-  "[00:10] Risk scoring — 4 dimensions per asset...",
+  "[00:10] Risk scoring, 4 dimensions per asset...",
   "[00:11] Ghost MCP → 100/100 CRITICAL (no auth + shell tools + orphaned)|err",
   "[00:12] Writing structured properties to DataHub GMS...",
   "[00:13] urn:li:mlModel:(urn:li:dataPlatform:mcp,ghost-mcp,PROD) ✓",
   "[00:14] urn:li:mlModel:(urn:li:dataPlatform:mcp,datahub-mcp,PROD) ✓",
-  "[00:15] ✓ Scan complete — 4 assets discovered, 1 critical"
+  "[00:15] ✓ Scan complete, 4 assets discovered, 1 critical"
 ];
 let scanning = false;
 function runScan() {
@@ -1564,13 +1564,13 @@ function renderDefcon(assets) {
   bar.style.display = "block";
   if (critical > 0) {
     bar.className = "defcon-1";
-    bar.textContent = "⚠ DEFCON 1 — " + critical + " CRITICAL AGENT" + (critical > 1 ? "S" : "") + " DETECTED";
+    bar.textContent = "⚠ DEFCON 1, " + critical + " CRITICAL AGENT" + (critical > 1 ? "S" : "") + " DETECTED";
   } else if (high > 0) {
     bar.className = "defcon-2";
-    bar.textContent = "▲ DEFCON 2 — " + high + " HIGH RISK AGENT" + (high > 1 ? "S" : "") + " ACTIVE";
+    bar.textContent = "▲ DEFCON 2, " + high + " HIGH RISK AGENT" + (high > 1 ? "S" : "") + " ACTIVE";
   } else {
     bar.className = "defcon-ok";
-    bar.textContent = "✓ FLEET SECURE — No critical threats detected";
+    bar.textContent = "✓ FLEET SECURE, No critical threats detected";
   }
 }
 
@@ -1709,7 +1709,7 @@ async function load() {
     if (!res.ok) throw new Error("HTTP " + res.status);
     render(await res.json(), null);
   } catch (err) {
-    render(FALLBACK, "Showing bundled sample data — could not read ../examples/scan_output.json (" + err.message + "). Serve this directory over HTTP to load live scan results.");
+    render(FALLBACK, "Showing bundled sample data, could not read ../examples/scan_output.json (" + err.message + "). Serve this directory over HTTP to load live scan results.");
   }
 }
 
@@ -1787,16 +1787,16 @@ function exportReport() {
   const TIER_BG    = { critical:"#FEF2F2", high:"#FFF7ED", medium:"#FFFBEB", low:"#F0FDF4" };
 
   const OWASP_LABELS = {
-    "LLM01":"LLM01 — Prompt Injection",
-    "LLM06":"LLM06 — Sensitive Information Disclosure",
-    "LLM08":"LLM08 — Excessive Agency",
-    "LLM02":"LLM02 — Insecure Output Handling",
-    "LLM03":"LLM03 — Training Data Poisoning",
-    "LLM04":"LLM04 — Model Denial of Service",
-    "LLM05":"LLM05 — Supply Chain Vulnerabilities",
-    "LLM07":"LLM07 — Insecure Plugin Design",
-    "LLM09":"LLM09 — Overreliance",
-    "LLM10":"LLM10 — Model Theft"
+    "LLM01":"LLM01, Prompt Injection",
+    "LLM06":"LLM06, Sensitive Information Disclosure",
+    "LLM08":"LLM08, Excessive Agency",
+    "LLM02":"LLM02, Insecure Output Handling",
+    "LLM03":"LLM03, Training Data Poisoning",
+    "LLM04":"LLM04, Model Denial of Service",
+    "LLM05":"LLM05, Supply Chain Vulnerabilities",
+    "LLM07":"LLM07, Insecure Plugin Design",
+    "LLM09":"LLM09, Overreliance",
+    "LLM10":"LLM10, Model Theft"
   };
 
   const REMED = {
@@ -1818,13 +1818,13 @@ function exportReport() {
     if (na) return `<span style="color:#94A3B8">N/A</span>`;
     if (val === true)  return `<span style="color:#16A34A;font-weight:700">✓ Pass</span>`;
     if (val === false) return `<span style="color:#DC2626;font-weight:700">✗ Fail</span>`;
-    return `<span style="color:#94A3B8">—</span>`;
+    return `<span style="color:#94A3B8">-</span>`;
   }
 
   const inventoryRows = assets.map(a => `
     <tr style="border-bottom:1px solid #E2E8F0">
       <td style="padding:10px 12px;font-weight:600">${a.name}</td>
-      <td style="padding:10px 12px;color:#64748B;font-size:12px">${a.type||"—"}</td>
+      <td style="padding:10px 12px;color:#64748B;font-size:12px">${a.type||"-"}</td>
       <td style="padding:10px 12px">${badge(a.risk_tier)}</td>
       <td style="padding:10px 12px;font-weight:700;color:${TIER_COLOR[a.risk_tier]||"#374151"}">${a.risk_score}/100</td>
       <td style="padding:10px 12px;color:#64748B;font-size:12px">${(a.tools||[]).length} tools</td>
@@ -1837,11 +1837,11 @@ function exportReport() {
     return `
     <tr style="border-bottom:1px solid #E2E8F0">
       <td style="padding:10px 12px;font-weight:600">${a.name}</td>
-      <td style="padding:10px 12px;font-size:12px;color:#64748B">${eu.risk_category||"—"}</td>
+      <td style="padding:10px 12px;font-size:12px;color:#64748B">${eu.risk_category||"-"}</td>
       <td style="padding:10px 12px;text-align:center">${check(eu.art9)}</td>
       <td style="padding:10px 12px;text-align:center">${check(eu.art13)}</td>
       <td style="padding:10px 12px;text-align:center">${check(eu.art50, noHuman)}</td>
-      <td style="padding:10px 12px;font-size:11px;color:#64748B">${eu.disclosure||"—"}</td>
+      <td style="padding:10px 12px;font-size:11px;color:#64748B">${eu.disclosure||"-"}</td>
       <td style="padding:10px 12px">${euReady.find(x=>x.name===a.name)
         ? `<span style="color:#16A34A;font-weight:700">✓ Ready</span>`
         : `<span style="color:#DC2626;font-weight:700">⚠ Attention</span>`}</td>
@@ -1866,7 +1866,7 @@ function exportReport() {
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AgentGuard Compliance Report — ${dateStr}</title>
+<title>AgentGuard Compliance Report, ${dateStr}</title>
 <style>
   * { box-sizing:border-box; margin:0; padding:0; }
   body { font-family: 'Segoe UI', Arial, sans-serif; color:#0F172A; background:#fff; font-size:14px; line-height:1.6; }
@@ -1904,7 +1904,7 @@ function exportReport() {
       <div style="color:#64748B;font-size:13px">AI Agent Fleet Governance</div>
     </div>
     <h1>AI Agent Fleet<br>Compliance Report</h1>
-    <p class="cover-meta">EU AI Act Readiness Assessment — Applicable 2 August 2026</p>
+    <p class="cover-meta">EU AI Act Readiness Assessment, Applicable 2 August 2026</p>
     <p class="cover-meta" style="margin-top:8px">Generated: ${dateHuman} at ${timeHuman} &nbsp;|&nbsp; Scan covers ${assets.length} assets &nbsp;|&nbsp; Powered by AgentGuard</p>
   </div>
 
@@ -1917,25 +1917,25 @@ function exportReport() {
     <div class="kpi"><div class="kpi-val" style="color:${euUnmet.length>0?"#DC2626":"#16A34A"}">${euUnmet.length} unmet</div><div class="kpi-label">EU AI Act Obligations</div></div>
   </div>
   <p>${critical.length > 0
-    ? `<strong style="color:#DC2626">⚠ DEFCON 1 — Immediate action required.</strong> ${critical.length} agent(s) scored in the critical tier (risk ≥75): ${critical.map(a=>a.name).join(", ")}. These agents must be reviewed, sandboxed, or decommissioned before the EU AI Act deadline of 2 August 2026.`
+    ? `<strong style="color:#DC2626">⚠ DEFCON 1, Immediate action required.</strong> ${critical.length} agent(s) scored in the critical tier (risk ≥75): ${critical.map(a=>a.name).join(", ")}. These agents must be reviewed, sandboxed, or decommissioned before the EU AI Act deadline of 2 August 2026.`
     : `Fleet health is within acceptable parameters. No critical agents detected.`}</p>
   <p>The EU AI Act General-Purpose AI provisions apply from 2 August 2026. ${euUnmet.length} asset(s) currently fail at least one applicable obligation. ${euReady.length} asset(s) are compliant.</p>
 
   <!-- Section I: Asset Inventory -->
-  <h2>Section I — AI Agent Inventory</h2>
+  <h2>Section I, AI Agent Inventory</h2>
   <div class="section-intro">Complete list of AI agents and MCP servers discovered by the AgentGuard scanner. Risk scores computed across four dimensions: Exposure, Agency, Data Quality, and OWASP LLM Top 10 flags.</div>
   <table>
     <thead><tr><th>Name</th><th>Type</th><th>Risk Tier</th><th>Score</th><th>Toolset</th><th>Owner</th></tr></thead>
     <tbody>${inventoryRows}</tbody>
   </table>
-  <p style="font-size:12px;color:#94A3B8">Risk tiers: Critical ≥75 · High ≥50 · Medium ≥25 · Low &lt;25. Score = 0–100 (100 = maximum risk).</p>
+  <p style="font-size:12px;color:#94A3B8">Risk tiers: Critical ≥75 · High ≥50 · Medium ≥25 · Low &lt;25. Score = 0-100 (100 = maximum risk).</p>
 
   <!-- Section II: EU AI Act -->
-  <h2>Section II — EU AI Act Compliance (Regulation 2024/1689)</h2>
+  <h2>Section II, EU AI Act Compliance (Regulation 2024/1689)</h2>
   <div class="section-intro">
-    <strong>Art. 9</strong> — Risk management system (passes when asset is below the high-risk tier).<br>
-    <strong>Art. 13</strong> — Transparency &amp; information to deployers (passes when toolset is fully documented).<br>
-    <strong>Art. 50</strong> — Transparency obligations for human-facing AI (passes when disclosure = true; N/A when no human interaction detected).
+    <strong>Art. 9</strong>, Risk management system (passes when asset is below the high-risk tier).<br>
+    <strong>Art. 13</strong>, Transparency &amp; information to deployers (passes when toolset is fully documented).<br>
+    <strong>Art. 50</strong>, Transparency obligations for human-facing AI (passes when disclosure = true; N/A when no human interaction detected).
   </div>
   <table>
     <thead><tr><th>Agent</th><th>Risk Category</th><th>Art. 9</th><th>Art. 13</th><th>Art. 50</th><th>Disclosure</th><th>Status</th></tr></thead>
@@ -1944,7 +1944,7 @@ function exportReport() {
   <p style="font-size:12px;color:#94A3B8">This assessment is derived from scan data and tool analysis. It does not constitute legal advice. Consult qualified EU AI Act counsel for formal compliance opinion.</p>
 
   <!-- Section III: OWASP LLM Top 10 -->
-  <h2>Section III — OWASP LLM Top 10 Findings</h2>
+  <h2>Section III, OWASP LLM Top 10 Findings</h2>
   <div class="section-intro">Security vulnerabilities detected based on declared tool capabilities. Flags are computed from tool keyword analysis against the OWASP LLM Top 10 (2025 edition).</div>
   ${Object.keys(owaspMap).length ? `
   <table>
@@ -1953,7 +1953,7 @@ function exportReport() {
   </table>` : `<p style="color:#16A34A;font-weight:600">✓ No OWASP LLM Top 10 flags detected in this fleet.</p>`}
 
   <!-- Section IV: Remediation -->
-  <h2>Section IV — Remediation Recommendations</h2>
+  <h2>Section IV, Remediation Recommendations</h2>
   <div class="section-intro">Prioritised by risk tier. Critical and High agents require immediate action before the EU AI Act deadline.</div>
   ${remedRows ? `
   <table>
@@ -1962,13 +1962,13 @@ function exportReport() {
   </table>` : `<p style="color:#16A34A;font-weight:600">✓ No high-priority remediation required. All agents in medium or low tier.</p>`}
 
   <!-- Annex: Methodology -->
-  <h2>Annex — Scoring Methodology</h2>
+  <h2>Annex, Scoring Methodology</h2>
   <table>
     <thead><tr><th>Dimension</th><th>Criteria</th><th>Max Points</th></tr></thead>
     <tbody>
       <tr style="border-bottom:1px solid #E2E8F0"><td style="padding:10px 12px;font-weight:600">Exposure</td><td style="padding:10px 12px;color:#374151">No authentication on MCP endpoint</td><td style="padding:10px 12px;font-weight:700">+40</td></tr>
       <tr style="border-bottom:1px solid #E2E8F0"><td style="padding:10px 12px;font-weight:600">Agency</td><td style="padding:10px 12px;color:#374151">Mutating tools (+25), Shell tools (+20), Tool sprawl &gt;10 (+10)</td><td style="padding:10px 12px;font-weight:700">+55</td></tr>
-      <tr style="border-bottom:1px solid #E2E8F0"><td style="padding:10px 12px;font-weight:600">Data Quality</td><td style="padding:10px 12px;color:#374151">ORPHANED status — server unreachable / no health endpoint</td><td style="padding:10px 12px;font-weight:700">+20</td></tr>
+      <tr style="border-bottom:1px solid #E2E8F0"><td style="padding:10px 12px;font-weight:600">Data Quality</td><td style="padding:10px 12px;color:#374151">ORPHANED status, server unreachable / no health endpoint</td><td style="padding:10px 12px;font-weight:700">+20</td></tr>
       <tr style="border-bottom:1px solid #E2E8F0"><td style="padding:10px 12px;font-weight:600">OWASP LLM</td><td style="padding:10px 12px;color:#374151">Credential tools (+10), Read-only tools (+4 each)</td><td style="padding:10px 12px;font-weight:700">+10</td></tr>
     </tbody>
   </table>
