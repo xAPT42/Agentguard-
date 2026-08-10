@@ -1238,7 +1238,7 @@ function openDrawer(name) {
   else if (d.raw !== a.risk_score)
     notes.push(`Reported score <strong>${a.risk_score}</strong> differs from the <strong>${d.raw}</strong> these fields produce — this asset's score did not come from the current scorer.`);
   else if (d.total !== d.raw)
-    notes.push(`Dimensions are clamped for display, so they total <strong>${d.total}</strong>; the scorer's uncapped signals sum to <strong>${d.raw}</strong>.`);
+    notes.push(`These dimensions sum to <strong>${d.total}</strong>; the score is capped at <strong>${d.raw}</strong>.`);
   const drift = notes.length ? `<div class="drift-note">${notes.join(" ")}</div>` : "";
 
   document.getElementById("drawer-body").innerHTML = `
