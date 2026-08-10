@@ -57,6 +57,31 @@ The row named `datahub` is **DataHub's own MCP Server**. AgentGuard found it by 
 
 ---
 
+## What is in here
+
+| Capability | What it does |
+|---|---|
+| **Tool poisoning detection** | Reads the definitions a server *serves*, not its config. Finds hidden instructions, credential exfiltration, concealment, invisible payloads in the Unicode Tags block, drift from the approved config, and definitions that changed since the last scan |
+| **Risk propagation** | An agent inherits the worst score among the servers it talks to. A server that can spawn agents inherits the whole fleet's reach |
+| **Supervision detection** | A listening port is not supervision. A server answering MCP with no health route is reported ORPHANED, with the reason |
+| **DataHub write-back** | 11 assets, 34 lineage edges, three entity types, tags, ownership, and a searchable `agentguard.*` property namespace |
+| **DataHub read-back** | Reads the catalog through the official MCP Server before writing, so a run can say which assets are new |
+| **Threat narratives** | A paragraph a CISO can act on, composed from the scan's own facts. Optional Claude API backend |
+| **EU AI Act fields** | Owner, data access scope, disclosure, risk category, written onto every entity |
+| **OWASP mapping** | Tagged against the GenAI LLM Top 10 2026, plus MCP03:2025 for tool poisoning |
+| **CI gate** | Exits non-zero on any critical finding |
+
+**Dashboard** (`dashboard/index.html`, no build step): five views over the same scan, a live threat feed driven by the current findings, an SVG blast-radius graph, and three exports.
+
+| Button | Output |
+|---|---|
+| **Run Scan** | Replays the scan sequence against the loaded report |
+| **Export JSON** | The full scan report, every field the CLI produced |
+| **Compliance Report** | A standalone HTML EU AI Act report, printable to PDF |
+| **Demo Mode** | Walks the real data in five scripted steps |
+
+---
+
 ## The finding that started this
 
 An MCP server tells the agent what its tools do. The agent hands those descriptions straight to the model, which means **a tool description is executable text**. A reviewer reads `Query a vector collection.` and approves it. The model reads:
